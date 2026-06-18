@@ -115,6 +115,7 @@
     <string name="root_installer">Root installer</string>
     <string name="shizuku_installer">Shizuku/Sui installer</string>
     <string name="dhizuku_installer">Dhizuku installer</string>
+    <string name="dhizuku_fallback_warning">Dhizuku unavailable — using the default installer</string>
     <string name="dhizuku_not_alive">Dhizuku isn\'t running</string>
     <string name="dhizuku_not_installed">Dhizuku isn\'t installed</string>
     <string name="error_dhizuku_service_unavailable">Dhizuku service not running</string>
