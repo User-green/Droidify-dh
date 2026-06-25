@@ -3,6 +3,8 @@ package com.looker.droidify.installer.installers.shizuku
 import android.content.Context
 import com.looker.droidify.data.model.PackageName
 import com.looker.droidify.installer.installers.Installer
+import com.looker.droidify.installer.installers.isShizukuAlive
+import com.looker.droidify.installer.installers.isShizukuGranted
 import com.looker.droidify.installer.installers.uninstallPackage
 import com.looker.droidify.installer.model.InstallItem
 import com.looker.droidify.installer.model.InstallState
@@ -19,6 +21,9 @@ class ShizukuInstaller(private val context: Context) : Installer {
     companion object {
         private val SESSION_ID_REGEX = Regex("(?<=\\[).+?(?=])")
     }
+
+    /** Pre-flight: the Shizuku/Sui binder is alive and our permission is granted. */
+    override suspend fun isAvailable(): Boolean = isShizukuAlive() && isShizukuGranted()
 
     override suspend fun install(
         installItem: InstallItem,

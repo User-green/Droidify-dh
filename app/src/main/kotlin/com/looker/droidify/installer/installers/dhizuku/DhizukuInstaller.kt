@@ -4,17 +4,15 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
 import android.content.pm.PackageInstaller
-import android.os.Handler
+import android.os.DeadObjectException
 import android.os.IBinder
-import android.os.Looper
 import android.os.ParcelFileDescriptor
 import android.util.Log
-import android.widget.Toast
 import com.looker.droidify.BuildConfig
-import com.looker.droidify.R
 import com.looker.droidify.data.model.PackageName
 import com.looker.droidify.installer.installers.Installer
-import com.looker.droidify.installer.installers.session.SessionInstaller
+import com.looker.droidify.installer.installers.awaitDhizukuAlive
+import com.looker.droidify.installer.installers.isDhizukuGranted
 import com.looker.droidify.installer.installers.wakeDhizukuServer
 import com.looker.droidify.installer.model.InstallItem
 import com.looker.droidify.installer.model.InstallState
@@ -38,19 +36,17 @@ import kotlin.coroutines.resume
  * it and forwards the APK (as a [ParcelFileDescriptor]) so the privileged side can drive
  * PackageInstaller silently.
  *
- * **Hardening:** this fallback only ever runs while the Dhizuku installer is the selected installer
- * (it lives entirely inside this class, which [com.looker.droidify.installer.InstallManager] only
- * creates for [com.looker.droidify.datastore.model.InstallerType.DHIZUKU]). The available Dhizuku
- * server is not always the standalone Dhizuku app — it may be a third-party reimplementation (e.g.
- * OwnDroid's built-in server) that doesn't fully support the UserService binding contract. Whenever
- * the privileged path is unusable — pre-API-26, no server, permission not granted, bind times out,
- * the server can't load our service, a binder call throws, or the install doesn't report success —
- * we warn the user once and fall back to [SessionInstaller] (the normal system installer UI)
- * instead of failing the install outright.
+ * This is a *pure* privileged installer: it never installs by any other means. When the privileged
+ * path is unusable it reports false from [isAvailable] (or [InstallState.Failed] from [install]) and
+ * lets [com.looker.droidify.installer.installers.FallbackInstaller] route to the normal installer.
+ * The available server is not always the standalone Dhizuku app — it may be a third-party server
+ * (e.g. OwnDroid's built-in one) — so binding is defensive and retried.
  */
 class DhizukuInstaller(private val context: Context) : Installer {
 
-    private val fallback = SessionInstaller(context)
+    // The privileged binding must survive a whole install queue, so the caller must not close us
+    // per item; closing per item would unbind and race the server tearing the service down.
+    override val keepAliveAcrossQueue: Boolean get() = true
 
     private val lock = Mutex()
     private var connection: ServiceConnection? = null
@@ -60,8 +56,9 @@ class DhizukuInstaller(private val context: Context) : Installer {
         DhizukuUserServiceArgs(ComponentName(context, DhizukuInstallerService::class.java))
     }
 
-    @Volatile
-    private var warned = false
+    /** Pre-flight: a Dhizuku-compatible server is present, awake, and has granted permission. */
+    override suspend fun isAvailable(): Boolean =
+        awaitDhizukuAlive(context) && isDhizukuGranted()
 
     override suspend fun install(installItem: InstallItem): InstallState {
         val file = Cache.getReleaseFile(context, installItem.installFileName)
@@ -69,61 +66,51 @@ class DhizukuInstaller(private val context: Context) : Installer {
             logD("install: cache file missing/empty (${file.absolutePath})", Log.ERROR)
             return InstallState.Failed
         }
-        val remote = bind() ?: run {
-            logD("install: bind() returned null -> session fallback")
-            return fallbackInstall(installItem)
-        }
-        val status = try {
-            ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { pfd ->
-                remote.install(pfd, file.length(), context.packageName)
+        // The binding is kept alive across a batch, but the server can still kill the UserService
+        // between installs. A stale binder throws DeadObjectException; drop it and re-bind a fresh
+        // service before giving up.
+        repeat(INSTALL_ATTEMPTS) { attempt ->
+            val remote = bind() ?: return InstallState.Failed
+            try {
+                val status = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY).use { pfd ->
+                    remote.install(pfd, file.length(), context.packageName)
+                }
+                return if (status == PackageInstaller.STATUS_SUCCESS) {
+                    logD("install: SUCCESS via Dhizuku (${installItem.packageName.name})")
+                    InstallState.Installed
+                } else {
+                    logD("install: Dhizuku returned status=$status", Log.WARN)
+                    InstallState.Failed
+                }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: DeadObjectException) {
+                logD("install: dead binder on attempt ${attempt + 1}, re-binding", Log.WARN)
+                invalidate()
+                if (attempt < INSTALL_ATTEMPTS - 1) delay(BIND_RETRY_DELAY_MS)
+            } catch (e: Exception) {
+                logD("install: remote.install threw\n${Log.getStackTraceString(e)}", Log.ERROR)
+                invalidate()
+                return InstallState.Failed
             }
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            logD("install: remote.install threw -> session fallback\n${Log.getStackTraceString(e)}", Log.ERROR)
-            invalidate()
-            return fallbackInstall(installItem)
         }
-        return if (status == PackageInstaller.STATUS_SUCCESS) {
-            logD("install: SUCCESS via Dhizuku (${installItem.packageName.name})")
-            InstallState.Installed
-        } else {
-            logD("install: Dhizuku returned status=$status -> session fallback", Log.WARN)
-            fallbackInstall(installItem)
-        }
+        return InstallState.Failed
     }
 
     override suspend fun uninstall(packageName: PackageName) {
-        val remote = bind() ?: run {
-            logD("uninstall: bind() returned null -> session fallback")
-            return fallbackUninstall(packageName)
-        }
+        val remote = bind() ?: error("Dhizuku unavailable for uninstall")
         try {
             val status = remote.uninstall(packageName.name)
             logD("uninstall: Dhizuku returned status=$status (${packageName.name})")
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            logD("uninstall: remote.uninstall threw -> session fallback\n${Log.getStackTraceString(e)}", Log.ERROR)
             invalidate()
-            fallbackUninstall(packageName)
+            throw e
         }
     }
 
-    override fun close() {
-        invalidate()
-        fallback.close()
-    }
-
-    private suspend fun fallbackInstall(installItem: InstallItem): InstallState {
-        warnFallback()
-        return fallback.install(installItem)
-    }
-
-    private suspend fun fallbackUninstall(packageName: PackageName) {
-        warnFallback()
-        fallback.uninstall(packageName)
-    }
+    override fun close() = invalidate()
 
     /**
      * Lazily binds (and caches) the privileged Dhizuku service, or null if it can't be used.
@@ -198,20 +185,11 @@ class DhizukuInstaller(private val context: Context) : Installer {
         return bound
     }
 
-    /** Drops the cached binding so the next operation re-binds (or falls back). */
+    /** Drops the cached binding so the next operation re-binds. */
     private fun invalidate() {
         connection?.let { runCatching { Dhizuku.unbindUserService(it) } }
         connection = null
         service = null
-    }
-
-    /** Warns the user once per installer lifetime that Dhizuku fell back to the default installer. */
-    private fun warnFallback() {
-        if (warned) return
-        warned = true
-        Handler(Looper.getMainLooper()).post {
-            Toast.makeText(context, R.string.dhizuku_fallback_warning, Toast.LENGTH_LONG).show()
-        }
     }
 
     // Debug-only: stripped (no-op) in release builds.
@@ -221,6 +199,7 @@ class DhizukuInstaller(private val context: Context) : Installer {
 
     private companion object {
         const val BIND_ATTEMPTS = 2
+        const val INSTALL_ATTEMPTS = 2
         // Generous enough for a cold UserService spawn on a slow device (imageless ART fallback) to
         // load our APK and instantiate the service before the attempt is abandoned.
         const val BIND_TIMEOUT_MS = 10_000L

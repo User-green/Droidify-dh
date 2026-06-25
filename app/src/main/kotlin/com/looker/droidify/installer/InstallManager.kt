@@ -6,6 +6,7 @@ import com.looker.droidify.database.Database
 import com.looker.droidify.datastore.SettingsRepository
 import com.looker.droidify.datastore.get
 import com.looker.droidify.datastore.model.InstallerType
+import com.looker.droidify.installer.installers.FallbackInstaller
 import com.looker.droidify.installer.installers.Installer
 import com.looker.droidify.installer.installers.LegacyInstaller
 import com.looker.droidify.installer.installers.dhizuku.DhizukuInstaller
@@ -110,7 +111,14 @@ class InstallManager(
                         state = InstallState.Installing,
                     ),
                 )
-                val result = installer.use { it.install(item) }
+                // A persistent installer (Dhizuku) holds one privileged binding for the whole queue;
+                // closing it per-item (use{}) unbinds and races the server killing the service. Every
+                // other installer keeps the original close-per-item behaviour.
+                val result = if (installer.keepAliveAcrossQueue) {
+                    installer.install(item)
+                } else {
+                    installer.use { it.install(item) }
+                }
                 if (result == InstallState.Installed && installer !is LegacyInstaller) {
                     if (deleteApkPreference.first()) {
                         val apkFile = Cache.getReleaseFile(context, item.installFileName)
@@ -150,9 +158,11 @@ class InstallManager(
             _installer = when (installerType) {
                 InstallerType.LEGACY -> LegacyInstaller(context, settingsRepository)
                 InstallerType.SESSION -> SessionInstaller(context)
-                InstallerType.SHIZUKU -> ShizukuInstaller(context)
+                InstallerType.SHIZUKU ->
+                    FallbackInstaller(context, ShizukuInstaller(context), SessionInstaller(context))
                 InstallerType.ROOT -> RootInstaller(context)
-                InstallerType.DHIZUKU -> DhizukuInstaller(context)
+                InstallerType.DHIZUKU ->
+                    FallbackInstaller(context, DhizukuInstaller(context), SessionInstaller(context))
             }
         }
     }
