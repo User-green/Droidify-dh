@@ -1,3 +1,19 @@
+# Droidify-dh
+
+> [!Caution]
+> **Unofficial fork — experimental, AI-assisted code.**
+>
+> Droidify-dh is a personal fork of [Droid-ify](https://github.com/Iamlooker/Droid-ify). A large share of the changes specific to this fork are written with AI assistance and have had only limited real-world testing. Review the code yourself before trusting it, and do not assume the same quality, security review, or stability as upstream Droid-ify. Use at your own risk.
+
+> [!Note]
+> **What this fork is for: Dhizuku support.**
+>
+> Droidify-dh exists to add a [Dhizuku](https://github.com/iamr0s/Dhizuku)-based installer — silent, background app installs and updates through a device-owner app, without root and without a per-install Shizuku prompt. If you don't need Dhizuku, upstream Droid-ify is the better choice.
+
+**Upstream and credit:** This fork stands entirely on the work of [LooKeR](https://github.com/Iamlooker) and the Droid-ify contributors. Droid-ify is an excellent, clutter-free F-Droid client and all credit for the app belongs to them — this fork only layers one extra installer on top. Please support and follow [the original project](https://github.com/Iamlooker/Droid-ify).
+
+---
+
 > [!Warning]
 > **Free and Open-Source Android is under threat.**
 >

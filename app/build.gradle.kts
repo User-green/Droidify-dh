@@ -20,7 +20,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.looker.droidify"
+        applicationId = "org.eu.tslp.droidifydh"
         minSdk = 23
         versionName = latestVersionName
         versionCode = 710
