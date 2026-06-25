@@ -13,7 +13,7 @@ plugins {
 }
 
 android {
-    val latestVersionName = "0.7.1"
+    val latestVersionName = "1.0.0"
     namespace = "com.looker.droidify"
     compileSdk {
         version = release(36)
@@ -23,7 +23,7 @@ android {
         applicationId = "org.eu.tslp.droidifydh"
         minSdk = 23
         versionName = latestVersionName
-        versionCode = 710
+        versionCode = 1000
 
         testInstrumentationRunner = "com.looker.droidify.TestRunner"
     }
@@ -100,6 +100,7 @@ android {
         compose = true
         viewBinding = true
         buildConfig = true
+        aidl = true
     }
 
     dependenciesInfo {
@@ -200,6 +201,7 @@ dependencies {
 
     implementation(libs.libsu.core)
     implementation(libs.bundles.shizuku)
+    implementation(libs.dhizuku.api)
 
     implementation(libs.jackson.core)
     implementation(libs.serialization)
