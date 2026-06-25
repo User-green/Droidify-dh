@@ -18,6 +18,7 @@ import com.looker.droidify.utility.common.cache.Cache
 import com.looker.droidify.utility.common.log
 import com.looker.droidify.utility.common.sdkAbove
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 class SessionInstaller(private val context: Context) : Installer {
@@ -26,6 +27,10 @@ class SessionInstaller(private val context: Context) : Installer {
     private val intent = Intent(context, SessionInstallerReceiver::class.java)
 
     companion object {
+        // Bounds the wait for the user to act on the install confirmation. Generous enough to read
+        // the dialog or tap the confirm notification, but finite so a backgrounded/abandoned popup
+        // fails cleanly instead of hanging the install queue forever.
+        private const val USER_ACTION_TIMEOUT_MS = 120_000L
         private var installerCallbacks: PackageInstaller.SessionCallback? = null
         private val flags = if (SdkCheck.isSnowCake) PendingIntent.FLAG_MUTABLE else 0
         private val sessionParams =
@@ -41,7 +46,8 @@ class SessionInstaller(private val context: Context) : Installer {
 
     override suspend fun install(
         installItem: InstallItem,
-    ): InstallState = suspendCancellableCoroutine { cont ->
+    ): InstallState = withTimeoutOrNull(USER_ACTION_TIMEOUT_MS) {
+        suspendCancellableCoroutine { cont ->
         val cacheFile = Cache.getReleaseFile(context, installItem.installFileName)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && installItem.unarchiveId != null) {
             sessionParams.setUnarchiveId(installItem.unarchiveId)
@@ -93,6 +99,13 @@ class SessionInstaller(private val context: Context) : Installer {
                 e.printStackTrace()
             }
         }
+        }
+    } ?: run {
+        // Backgrounding the app while the confirm popup is up leaves the session in
+        // PENDING_USER_ACTION with no callback, so the wait would otherwise hang the whole queue.
+        // Time out, abandon (via the coroutine's invokeOnCancellation) and fail so the queue moves on.
+        log("Session install timed out waiting for user action", type = Log.WARN)
+        InstallState.Failed
     }
 
     @SuppressLint("MissingPermission")

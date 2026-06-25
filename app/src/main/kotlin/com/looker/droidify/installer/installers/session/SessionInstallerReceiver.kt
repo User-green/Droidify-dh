@@ -1,5 +1,6 @@
 package com.looker.droidify.installer.installers.session
 
+import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -37,11 +38,43 @@ class SessionInstallerReceiver : BroadcastReceiver() {
                 it.putExtra(Intent.EXTRA_INSTALLER_PACKAGE_NAME, "com.android.vending")
                 it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
-                context.startActivity(it)
+                promptUserAction(context, intent, it)
             }
         } else {
             notifyStatus(intent, context)
         }
+    }
+
+    /**
+     * Show the system install-confirmation. A direct [Context.startActivity] only succeeds while the
+     * app is in the foreground; backgrounded it is silently BAL-blocked and the install would stall.
+     * So also post a tap-to-confirm notification (replacing the per-package install notification) —
+     * a notification tap is a user gesture the system allows to launch the confirmation.
+     */
+    private fun promptUserAction(context: Context, statusIntent: Intent, promptIntent: Intent) {
+        runCatching { context.startActivity(promptIntent) }
+
+        val packageName = statusIntent.getStringExtra(PackageInstaller.EXTRA_PACKAGE_NAME) ?: return
+        val appName = context.packageManager.getPackageName(packageName)?.toString() ?: packageName
+
+        context.createNotificationChannel(
+            id = NOTIFICATION_CHANNEL_INSTALL,
+            name = context.getString(R.string.install),
+        )
+        val confirmIntent = PendingIntent.getActivity(
+            context,
+            packageName.hashCode(),
+            promptIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+        val notification = context.createInstallNotification(
+            appName = appName,
+            state = InstallState.Pending,
+        ) {
+            setContentIntent(confirmIntent)
+            setAutoCancel(true)
+        }
+        context.notificationManager?.installNotification(packageName, notification)
     }
 
     private fun notifyStatus(intent: Intent, context: Context) {
