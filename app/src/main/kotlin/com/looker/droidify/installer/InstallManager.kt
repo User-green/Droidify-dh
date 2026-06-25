@@ -27,6 +27,7 @@ import com.looker.droidify.utility.notifications.installNotification
 import com.looker.droidify.utility.notifications.removeInstallNotification
 import com.looker.droidify.utility.notifications.updatesAvailableNotification
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
@@ -56,6 +57,15 @@ class InstallManager(
     private val installer: Installer get() = _installer!!
 
     private val lock = Mutex()
+
+    // The single install currently being processed (installs run one at a time), and a flag set by
+    // [restartInstall] to re-run that same item in place instead of advancing to the next one.
+    @Volatile
+    private var activeInstall: Pair<String, Job>? = null
+
+    @Volatile
+    private var restartRequested = false
+
     private val skipSignature = settingsRepository.get { ignoreSignature }
     private val installerPreference = settingsRepository.get { installerType }
     private val deleteApkPreference = settingsRepository.get { deleteApkOnInstall }
@@ -89,6 +99,19 @@ class InstallManager(
         updateState { put(packageName, InstallState.Failed) }
     }
 
+    /**
+     * Kills the in-flight install for [packageName] (if it is the one running) and re-runs it in
+     * place — used by the UI "restart installer" action for interactive installers whose
+     * confirmation popup was missed or abandoned. Never advances the queue to the next app.
+     */
+    fun restartInstall(packageName: PackageName) {
+        val active = activeInstall ?: return
+        if (active.first == packageName.name) {
+            restartRequested = true
+            active.second.cancel()
+        }
+    }
+
     private fun CoroutineScope.setupInstaller() = launch {
         installerPreference.collectLatest(::setInstaller)
     }
@@ -103,7 +126,6 @@ class InstallManager(
             }
         }.consumeEach { item ->
             if (state.value.containsKey(item.packageName)) {
-                updateState { put(item.packageName, InstallState.Installing) }
                 notificationManager?.installNotification(
                     packageName = item.packageName.name,
                     notification = context.createInstallNotification(
@@ -111,14 +133,28 @@ class InstallManager(
                         state = InstallState.Installing,
                     ),
                 )
-                // A persistent installer (Dhizuku) holds one privileged binding for the whole queue;
-                // closing it per-item (use{}) unbinds and races the server killing the service. Every
-                // other installer keeps the original close-per-item behaviour.
-                val result = if (installer.keepAliveAcrossQueue) {
-                    installer.install(item)
-                } else {
-                    installer.use { it.install(item) }
-                }
+                // restartInstall() cancels the in-flight attempt and we re-run THIS item in place, so
+                // a restart never advances the queue to the next app.
+                var result: InstallState
+                do {
+                    restartRequested = false
+                    updateState { put(item.packageName, InstallState.Installing) }
+                    var attempt: InstallState = InstallState.Failed
+                    // A persistent installer (Dhizuku) holds one privileged binding for the whole
+                    // queue; closing it per-item (use{}) unbinds and races the server killing the
+                    // service. Every other installer keeps the original close-per-item behaviour.
+                    val job = launch {
+                        attempt = if (installer.keepAliveAcrossQueue) {
+                            installer.install(item)
+                        } else {
+                            installer.use { it.install(item) }
+                        }
+                    }
+                    activeInstall = item.packageName.name to job
+                    job.join()
+                    activeInstall = null
+                    result = if (job.isCancelled) InstallState.Failed else attempt
+                } while (restartRequested)
                 if (result == InstallState.Installed && installer !is LegacyInstaller) {
                     if (deleteApkPreference.first()) {
                         val apkFile = Cache.getReleaseFile(context, item.installFileName)

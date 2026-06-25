@@ -140,6 +140,17 @@ class AppDetailViewModel @Inject constructor(
         }
     }
 
+    /** SESSION/LEGACY need a user confirmation, so their install is restartable from the UI. */
+    fun isInteractiveInstaller(): Boolean {
+        val type = runBlocking { settingsRepository.getInitial().installerType }
+        return type == InstallerType.SESSION || type == InstallerType.LEGACY
+    }
+
+    /** Kill the in-flight install for this app and re-run it in place (foreground confirm). */
+    fun restartInstall() {
+        installer.restartInstall(packageName.toPackageName())
+    }
+
     companion object {
         const val ARG_PACKAGE_NAME = "package_name"
         const val ARG_REPO_ADDRESS = "repo_address"

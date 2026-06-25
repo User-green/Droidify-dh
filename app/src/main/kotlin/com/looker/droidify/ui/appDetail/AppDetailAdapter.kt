@@ -118,6 +118,7 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
         DETAILS(stringRes.details, drawableRes.ic_tune),
         UNINSTALL(stringRes.uninstall, drawableRes.ic_delete),
         CANCEL(stringRes.cancel, drawableRes.ic_cancel),
+        RESTART(stringRes.restart_installer, drawableRes.ic_sync),
         SHARE(stringRes.share, drawableRes.ic_share),
         SOURCE(stringRes.source_code, drawableRes.ic_source_code),
     }

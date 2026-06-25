@@ -27,10 +27,10 @@ class SessionInstaller(private val context: Context) : Installer {
     private val intent = Intent(context, SessionInstallerReceiver::class.java)
 
     companion object {
-        // Bounds the wait for the user to act on the install confirmation. Generous enough to read
-        // the dialog or tap the confirm notification, but finite so a backgrounded/abandoned popup
-        // fails cleanly instead of hanging the install queue forever.
-        private const val USER_ACTION_TIMEOUT_MS = 120_000L
+        // Bounds the wait for the user to act on the install confirmation. Short so a
+        // backgrounded/abandoned popup fails cleanly and frees the queue quickly; the user can
+        // restart the install from the UI (or by reopening the app).
+        private const val USER_ACTION_TIMEOUT_MS = 20_000L
         private var installerCallbacks: PackageInstaller.SessionCallback? = null
         private val flags = if (SdkCheck.isSnowCake) PendingIntent.FLAG_MUTABLE else 0
         private val sessionParams =

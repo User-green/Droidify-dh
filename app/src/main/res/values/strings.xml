@@ -102,6 +102,7 @@
     <string name="incompatible_versions_summary">Show app versions incompatible with the device</string>
     <string name="incompatible_with_FORMAT">Incompatible with %s</string>
     <string name="install">Install</string>
+    <string name="restart_installer">Restart installer</string>
     <string name="install_types">Installation</string>
     <string name="installer">Installer</string>
     <string name="legacyInstallerComponent">Legacy installer component</string>

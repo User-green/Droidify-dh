@@ -310,6 +310,10 @@ class AppDetailFragment() : ScreenFragment(), AppDetailAdapter.Callbacks {
         }
 
         val adapterAction = when {
+            // SESSION/LEGACY need a user confirmation that can be missed/abandoned; keep the button
+            // active as "Restart installer" so it can be re-run instead of going inactive.
+            installing == InstallState.Installing && viewModel.isInteractiveInstaller() ->
+                AppDetailAdapter.Action.RESTART
             installing == InstallState.Installing -> null
             installing == InstallState.Pending -> AppDetailAdapter.Action.CANCEL
             downloading -> AppDetailAdapter.Action.CANCEL
@@ -455,6 +459,8 @@ class AppDetailFragment() : ScreenFragment(), AppDetailAdapter.Callbacks {
                 }
             }
 
+            AppDetailAdapter.Action.RESTART -> viewModel.restartInstall()
+
             AppDetailAdapter.Action.SHARE -> {
                 val repo = products[0].second
                 val address = when {
@@ -479,6 +485,16 @@ class AppDetailFragment() : ScreenFragment(), AppDetailAdapter.Callbacks {
                 val link = products[0].first.source
                 context?.openLink(link)
             }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Reopening the app foregrounds it. If an interactive (SESSION/LEGACY) install is stuck
+        // waiting for its confirmation popup — which can't show from the background — restart it in
+        // place so the confirm reappears now that we are in the foreground.
+        if (installing == InstallState.Installing && viewModel.isInteractiveInstaller()) {
+            viewModel.restartInstall()
         }
     }
 
