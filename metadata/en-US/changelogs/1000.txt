@@ -1,0 +1,8 @@
+Droidify-DH v1.0.0 — first release of this Dhizuku fork of Droid-ify.
+
+- New Dhizuku install method: device-owner installs via Dhizuku/OwnDroid, including reliable batch installs
+- Privileged-installer fallback: Dhizuku and Shizuku now fall back to the Session installer when unavailable
+- Session installs confirm via a notification when the app is in the background, and no longer hang on an abandoned dialog
+- Interactive installs can be restarted from the app page
+
+AI-assisted fork — review before trusting. All credit for Droid-ify goes to LooKeR and its contributors.

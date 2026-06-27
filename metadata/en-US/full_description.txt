@@ -2,7 +2,7 @@ Features:
 
 • Browse and install apps from F-Droid repositories
 • Automatic app updates in the background 
-• Multiple installation methods (Session, Root, Shizuku)
+• Multiple installation methods (Session, Root, Shizuku, Dhizuku)
 • Add custom repositories with one tap
 • Works completely offline after initial sync
 

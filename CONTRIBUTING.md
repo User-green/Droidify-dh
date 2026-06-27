@@ -129,8 +129,9 @@ Use [Conventional Commits](https://www.conventionalcommits.org/) format:
 
 ## 🔐 Security
 
-**Do not** report security vulnerabilities through public GitHub issues. Send details
-to `iamlooker@proton.me` instead.
+**Do not** report security vulnerabilities through public GitHub issues. For issues in
+this fork, send details to `usergreen@personal.tslp.eu.org` instead. For vulnerabilities
+in upstream Droid-ify, please report to the upstream maintainer.
 
 ## 📞 Getting Help
 

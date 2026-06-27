@@ -70,6 +70,7 @@ ED:88:59:C5:5A:F3:11:16:26:58:B9:4A:F9:82:B9:F0:91:DC:D2:76:28:D4:DE:34:86:D1:21
 Droid-ify
 
 Copyright (C) 2025 LooKeR
+Copyright (C) 2026 User-green (Droidify-DH fork)
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
