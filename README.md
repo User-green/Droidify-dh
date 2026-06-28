@@ -8,7 +8,7 @@
 > [!Note]
 > **What this fork is for: Dhizuku support.**
 >
-> Droidify-dh exists to add a [Dhizuku](https://github.com/iamr0s/Dhizuku)-based installer — new installer that uses device-owner privilegis to install apps in  background. It works without installer popups, root acess or needing to to start Shizuku after each reboot. However, if you don't need Dhizuku, upstream Droid-ify is the better choice.
+> Droidify-dh exists to add a [Dhizuku](https://github.com/iamr0s/Dhizuku)-based installer — new installer that uses device-owner privilegis to install apps in  background. It works without installer popups, root acess or needing to to start Shizuku after each reboot. However, if you have root or don’t have Dhizuku configured, upstream Droid-ify is the better choice.
 
 > [!Note]
 > **Upstream and credit:** 
