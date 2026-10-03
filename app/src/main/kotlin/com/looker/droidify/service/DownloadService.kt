@@ -15,17 +15,19 @@ import com.looker.droidify.R.string.http_error_DESC
 import com.looker.droidify.R.string.io_error_DESC
 import com.looker.droidify.R.string.socket_error_DESC
 import com.looker.droidify.R.string.unknown_error_DESC
+import com.looker.droidify.data.model.toPackageName
 import com.looker.droidify.datastore.SettingsRepository
 import com.looker.droidify.datastore.get
 import com.looker.droidify.datastore.model.InstallerType
 import com.looker.droidify.installer.InstallManager
+import com.looker.droidify.installer.model.InstallItem
 import com.looker.droidify.installer.model.InstallState
-import com.looker.droidify.installer.model.installFrom
 import com.looker.droidify.model.Release
 import com.looker.droidify.model.Repository
 import com.looker.droidify.network.DataSize
 import com.looker.droidify.network.Downloader
 import com.looker.droidify.network.NetworkResponse
+import com.looker.droidify.network.header.authentication
 import com.looker.droidify.network.percentBy
 import com.looker.droidify.network.validation.ValidationResult
 import com.looker.droidify.utility.common.Constants
@@ -43,6 +45,8 @@ import com.looker.droidify.utility.common.log
 import com.looker.droidify.utility.notifications.createInstallNotification
 import com.looker.droidify.utility.notifications.installNotification
 import dagger.hilt.android.AndroidEntryPoint
+import java.io.File
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -56,8 +60,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.yield
-import java.io.File
-import javax.inject.Inject
 import com.looker.droidify.R.string as stringRes
 
 @AndroidEntryPoint
@@ -309,7 +311,10 @@ class DownloadService : ConnectionService<DownloadService.Binder>() {
             currentInstaller == InstallerType.DHIZUKU ||
             autoInstallWithSessionInstaller
         ) {
-            val installItem = task.packageName installFrom task.release.cacheFileName
+            val installItem = InstallItem(
+                packageName = task.packageName.toPackageName(),
+                installFileName = task.release.cacheFileName,
+            )
             installer install installItem
         }
     }
@@ -472,13 +477,18 @@ class DownloadService : ConnectionService<DownloadService.Binder>() {
                 is NetworkResponse.Error -> {
                     updateCurrentState(State.Error(task.packageName))
                     val description = when (response) {
-                        is NetworkResponse.Error.ConnectionTimeout -> connection_error_DESC
-                        is NetworkResponse.Error.Http -> http_error_DESC
-                        is NetworkResponse.Error.IO -> io_error_DESC
-                        is NetworkResponse.Error.SocketTimeout -> socket_error_DESC
-                        is NetworkResponse.Error.Unknown -> unknown_error_DESC
+                        is NetworkResponse.Error.ConnectionTimeout -> getString(connection_error_DESC)
+
+                        is NetworkResponse.Error.Http -> {
+                            target.delete()
+                            getString(http_error_DESC, "HTTP ${response.statusCode}")
+                        }
+
+                        is NetworkResponse.Error.IO -> getString(io_error_DESC)
+                        is NetworkResponse.Error.SocketTimeout -> getString(socket_error_DESC)
+                        is NetworkResponse.Error.Unknown -> getString(unknown_error_DESC)
                     }
-                    showErrorNotification(task, could_not_download_FORMAT, getString(description))
+                    showErrorNotification(task, could_not_download_FORMAT, description)
                 }
             }
         } finally {

@@ -1,7 +1,5 @@
 package com.looker.droidify.data.local.model
 
-import androidx.room.Entity
-import androidx.room.Index
 import com.looker.droidify.sync.JsonParser
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
@@ -10,11 +8,6 @@ import java.io.InputStream
 import java.util.*
 import kotlin.time.ExperimentalTime
 
-@Entity(
-    tableName = "download_stats",
-    primaryKeys = ["packageName", "source", "timestamp"],
-    indices = [Index("packageName"), Index("timestamp")],
-)
 data class DownloadStats(
     val packageName: String,
     val source: String,
@@ -41,7 +34,7 @@ class DownloadStatsData(val stats: Map<String, Long>) {
         fun fromStream(inst: InputStream) =
             DownloadStatsData(JsonParser.decodeFromStream<Map<String, Long>>(inst))
 
-        @OptIn(ExperimentalTime::class)
+        @Suppress("DEPRECATION")
         fun String.toEpochMillis(): Long {
             val parts = split("-")
             val year = parts[0].toInt() - 1900

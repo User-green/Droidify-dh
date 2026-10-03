@@ -6,7 +6,7 @@
     <string name="all_applications">Összes alkalmazás</string>
     <string name="amoled">Fekete</string>
     <string name="credits">Köszönet</string>
-    <string name="donate">Támogatás</string>
+    <string name="donate">Adakozás</string>
     <string name="install_types">Telepítés</string>
     <plurals name="new_updates_DESC_FORMAT">
         <item quantity="one">%d alkalmazás új verziója érhető el</item>
@@ -53,7 +53,7 @@
     <string name="has_advertising">Reklámot tartalmaz</string>
     <string name="has_non_free_dependencies">Más, nem szabad alkalmazásoktól függ</string>
     <string name="has_security_vulnerabilities">Biztonsági sérülékenységei vannak</string>
-    <string name="http_error_DESC">Érvénytelen kiszolgálóválasz</string>
+    <string name="http_error_DESC">Érvénytelen kiszolgálóválasz: %s</string>
     <string name="http_proxy">HTTP proxy</string>
     <string name="ignore_all_updates">Új verziók mellőzése</string>
     <string name="ignore_this_update">Ezen verzió mellőzése</string>
@@ -75,8 +75,8 @@
     <string name="invalid_signature_error_DESC">Érvénytelen aláírás</string>
     <string name="invalid_username_format">Érvénytelen felhasználónév formátum</string>
     <string name="launch">Indítás</string>
-    <string name="license">Licensz</string>
-    <string name="license_FORMAT">%s licensz</string>
+    <string name="license">Licenc</string>
+    <string name="license_FORMAT">%s licenc</string>
     <string name="light">Világos</string>
     <string name="link_copied_to_clipboard">Hivatkozás másolva</string>
     <string name="links">Hivatkozások</string>
@@ -116,7 +116,7 @@
     <string name="requires_FORMAT">%s szükséges</string>
     <string name="save">Mentés</string>
     <string name="search">Keresés</string>
-    <string name="select_mirror">Válasszon egy címet</string>
+    <string name="select_mirror">Tükör kiválasztása</string>
     <string name="show_more">Továbbiak megjelenítése</string>
     <string name="show_older_versions">Régebbi verziók megjelenítése</string>
     <string name="signature_FORMAT">%s aláírás</string>
@@ -141,7 +141,7 @@
     <string name="unstable_updates">Instabil frissítések</string>
     <string name="unstable_updates_summary">Instabil alkalmazásverziók telepítésének javaslata</string>
     <string name="update">Frissítés</string>
-    <string name="upstream_source_code_is_not_free">Upstream forráskód nem szabad</string>
+    <string name="upstream_source_code_is_not_free">Az upstream forráskód nem szabad</string>
     <string name="username">Felhasználónév</string>
     <string name="username_missing">Hiányzó felhasználónév</string>
     <string name="validation_index_error_DESC">Az index nem ellenőrizhető</string>
@@ -156,7 +156,7 @@
     <string name="incompatible_older_DESC">Ez a verzió régebbi mint az eszközre telepített</string>
     <string name="incompatible_platforms_DESC_FORMAT">Az architektúra nem támogatott: %1$s. Támogatott architektúrák: %2$s</string>
     <string name="saving_details">Részletek mentése…</string>
-    <string name="waiting_to_start_download">Várakozás a letöltés elindítására…</string>
+    <string name="waiting_to_start_download">Letöltés sorban áll…</string>
     <string name="incompatible_signature_DESC">Ez a verzió a jelenleg az eszközére telepített verziójától eltérő aláírással rendelkezik</string>
     <string name="processing_FORMAT">%1$s feldolgozása…</string>
     <string name="syncing_FORMAT">%s szinkronizálása…</string>
@@ -171,17 +171,17 @@
     <string name="shizuku_installer">Shizuku/Sui telepítő</string>
     <string name="cleanup_title">Időközi APK eltávolítás</string>
     <plurals name="hours">
-        <item quantity="one">óra</item>
-        <item quantity="other">óra</item>
+        <item quantity="one">%d óra</item>
+        <item quantity="other">%d óra</item>
     </plurals>
     <plurals name="days">
-        <item quantity="one">nap</item>
-        <item quantity="other">napok</item>
+        <item quantity="one">%d nap</item>
+        <item quantity="other">%d napok</item>
     </plurals>
     <string name="io_error_DESC">Bizonyos műveleteket nem lehet végrehajtani</string>
     <string name="auto_update_apps">Telepítse automatikusan a frissítéseket</string>
     <string name="installing">Telepítés alatt</string>
-    <string name="waiting_to_start_installation">Várakozás a telepítés megkezdésére …</string>
+    <string name="waiting_to_start_installation">Telepítés várakozik…</string>
     <string name="favourites">Kedvencek</string>
     <string name="force_clean_up_DESC">Eltakarítja a fölösleges fájlokat</string>
     <string name="force_clean_up">Kényszerített takarítás</string>
@@ -212,8 +212,8 @@
     <string name="import_repos_DESC">Tárolók importálása fájlból</string>
     <string name="export_repos_title">Tárolók exportálása</string>
     <string name="export_repos_DESC">Tárolók exportálása fájlba</string>
-    <string name="require_background_access">Akkumulátor-optimalizálás letiltása</string>
-    <string name="require_background_access_DESC">Az akkumulátor-optimalizálás kikapcsolása szükséges a háttér-szinkronizálás megfelelő működéséhez</string>
+    <string name="require_background_access">Akkumulátoroptimalizálás letiltása</string>
+    <string name="require_background_access_DESC">Az akkumulátoroptimalizálás kikapcsolása szükséges a háttérszinkronizálás megfelelő működéséhez</string>
     <string name="ignore_signature_summary">Aláírás figyelmen kívül hagyása az alkalmazás telepítésekor</string>
     <string name="installation_failed">Sikertelen telepítés</string>
     <string name="installation_failed_DESC">%s telepítése sikertelen</string>
@@ -244,7 +244,6 @@
     <string name="repository_not_found_by_id">Tároló nem található</string>
     <string name="title_activity_main_compose">MainComposeActivity</string>
     <string name="rb_badge">Reprodukálható összeállítási jelvény</string>
-    <string name="rb_badge_info">Zöld pipa-&gt; Ellenőrzött, reprodukálható összeállítás\nPiros pipa -&gt; Nem reprodukálható összeállítás\nBarna pipa -&gt; Ismeretlen állapot</string>
     <string name="rb_info">Ha egy összeállítás reprodukálható, az azt jelenti, hogy az adott apk a megadott forrásból lett összeállítva</string>
     <string name="total_downloads">Összes letöltés</string>
     <string name="download_stats">Letöltési statisztikák</string>
@@ -276,4 +275,17 @@
     <string name="custom_buttons_import">Gombok importálása</string>
     <string name="custom_buttons_imported">Egyéni gombok importálva</string>
     <string name="copied_to_clipboard">Másolva</string>
+    <string name="proxy_restart_required">A módosítások érvényesítéséhez újraindítás szükséges.</string>
+    <string name="tap_to_resume_updates">Koppintson a frissítések folytatásához</string>
+    <string name="rb_badge_verified">Ellenőrzött reprodukálható összeállítás</string>
+    <string name="rb_badge_non_reproducible">Nem reprodukálható összeállítás</string>
+    <string name="rb_badge_unknown">Ismeretlen állapot</string>
+    <string name="rb_badge_no_data">Nincsenek reprodukálható összeállítási adatok</string>
+    <string name="rb_what_is">Mik azok a reprodukálható összeállítások?</string>
+    <string name="download_statistics_summary">Az IzzyOnDroid havi letöltésszámainak lekérése és megjelenítése. Kikapcsoláskor a meglévő letöltési statisztikák törlődnek.</string>
+    <string name="reproducibility_logs">Reprodukálhatósági naplók</string>
+    <string name="reproducibility_logs_summary">Az IzzyOnDroid reprodukálható összeállítás-ellenőrzési naplóinak lekérése és megjelenítése. Kikapcsoláskor a meglévő reprodukálhatósági naplók törlődnek.</string>
+    <string name="scan_qr_code">QR-kód beolvasása</string>
+    <string name="qr_camera_permission_required">A QR-kódok beolvasásához kamera-hozzáférési engedély szükséges</string>
+    <string name="qr_scan_failed">A QR-kód beolvasása nem sikerült</string>
 </resources>

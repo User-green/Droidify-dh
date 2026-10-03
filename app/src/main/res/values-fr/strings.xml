@@ -75,7 +75,7 @@
     <string name="version">Version</string>
     <string name="version_FORMAT">Version %s</string>
     <string name="versions">Versions</string>
-    <string name="waiting_to_start_download">En attente du lancement du téléchargement…</string>
+    <string name="waiting_to_start_download">Téléchargement en attente…</string>
     <string name="whats_new">Quoi de neuf</string>
     <string name="website">Site internet du projet</string>
     <string name="update">Mettre à jour</string>
@@ -108,7 +108,7 @@
     <string name="link_copied_to_clipboard">Lien copié</string>
     <string name="incompatible_version">Version incompatible</string>
     <string name="has_advertising">Contient des pubs</string>
-    <string name="http_error_DESC">Réponse du serveur non valide</string>
+    <string name="http_error_DESC">Réponse du serveur non valide : %s</string>
     <string name="http_proxy">Proxy HTTP</string>
     <string name="incompatible_features_DESC">Fonctionnalités manquantes</string>
     <string name="incompatible_older_DESC">Cette version est plus ancienne que celle installée sur votre appareil</string>
@@ -171,14 +171,14 @@
     <string name="shizuku_installer">Installateur Shizuku/Sui</string>
     <string name="cleanup_title">Intervalle de nettoyage des APK</string>
     <plurals name="days">
-        <item quantity="one">jour</item>
-        <item quantity="many">jours</item>
-        <item quantity="other">jours</item>
+        <item quantity="one">%d jour</item>
+        <item quantity="many">%d jours</item>
+        <item quantity="other">%d jours</item>
     </plurals>
     <plurals name="hours">
-        <item quantity="one">heure</item>
-        <item quantity="many">heures</item>
-        <item quantity="other">heures</item>
+        <item quantity="one">%d heure</item>
+        <item quantity="many">%d heures</item>
+        <item quantity="other">%d heures</item>
     </plurals>
     <string name="only_on_wifi_with_charging">Uniquement sur Wi-Fi et en charge</string>
     <string name="io_error_DESC">Impossible d’effectuer certaines actions</string>
@@ -190,7 +190,7 @@
     <string name="force_clean_up_DESC">Nettoyer les fichiers redondants</string>
     <string name="enable_repo">Activer dépôt</string>
     <string name="installing">En cours d\'installation</string>
-    <string name="waiting_to_start_installation">En attente du démarrage de l\'installation…</string>
+    <string name="waiting_to_start_installation">Installation en attente…</string>
     <string name="auto_update">Mise à jour automatique des applis</string>
     <string name="auto_update_apps">Installer les mises à jour automatiquement</string>
     <string name="has_non_free_components">A des composants non libres</string>
@@ -246,7 +246,6 @@
     <string name="repository_not_synced_or_enabled">Dépôt non-activé ou non-synchronisé</string>
     <string name="action_sync_repo">Synchroniser</string>
     <string name="rb_badge">Badge de build reproductible</string>
-    <string name="rb_badge_info">Coche verte \t -&gt; Build reproductible vérifiée\nCoche rouge \t -&gt; Build non-reproductible\nCoche marron \t -&gt; État inconnu</string>
     <string name="rb_info">Si une build est reproductible, cela veut dire que l\'APK donné a été build depuis la source fournie</string>
     <string name="total_downloads">Téléchargements totaux</string>
     <string name="download_stats">Statistiques de téléchargements</string>
@@ -279,4 +278,17 @@
     <string name="custom_buttons_export">Exporter boutons</string>
     <string name="custom_buttons_import">Importer boutons</string>
     <string name="custom_buttons_imported">Boutons persos importés</string>
+    <string name="proxy_restart_required">Un redémarrage est nécessaire pour que les modifications prennent effet.</string>
+    <string name="tap_to_resume_updates">Ouvrez l\'application pour reprendre les mises à jour</string>
+    <string name="rb_badge_verified">Build reproductible vérifié</string>
+    <string name="rb_badge_non_reproducible">Build non reproductible</string>
+    <string name="rb_badge_unknown">État inconnu</string>
+    <string name="rb_badge_no_data">Aucune donnée de compilation reproductible</string>
+    <string name="rb_what_is">Qu\'est-ce que les builds reproductibles ?</string>
+    <string name="download_statistics_summary">Récupérer et afficher le nombre mensuel de téléchargements depuis IzzyOnDroid. La désactivation efface les statistiques de téléchargement existantes.</string>
+    <string name="reproducibility_logs">Journaux de reproductibilité</string>
+    <string name="reproducibility_logs_summary">Récupère et affiche les journaux de vérification de la reproductibilité des builds provenant d\'IzzyOnDroid. La désactivation efface les journaux de reproductibilité existants.</string>
+    <string name="scan_qr_code">Scanner le QR code</string>
+    <string name="qr_camera_permission_required">L\'autorisation d\'utiliser la caméra est requise pour scanner les QR codes</string>
+    <string name="qr_scan_failed">Impossible de scanner le QR code</string>
 </resources>

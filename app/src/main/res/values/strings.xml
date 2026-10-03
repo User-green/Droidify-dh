@@ -36,8 +36,8 @@
     <string name="credits">Credits</string>
     <string name="dark">Dark</string>
     <plurals name="days">
-        <item quantity="one">day</item>
-        <item quantity="other">days</item>
+        <item quantity="one">%d day</item>
+        <item quantity="other">%d days</item>
     </plurals>
     <string name="delete">Delete</string>
     <string name="delete_repository_DESC">Delete the repository?</string>
@@ -79,10 +79,10 @@
     <string name="home_screen_swiping">Page swiping</string>
     <string name="home_screen_swiping_DESC">Swipe left or right to switch the page</string>
     <plurals name="hours">
-        <item quantity="one">hour</item>
-        <item quantity="other">hours</item>
+        <item quantity="one">%d hour</item>
+        <item quantity="other">%d hours</item>
     </plurals>
-    <string name="http_error_DESC">Invalid server response</string>
+    <string name="http_error_DESC">Invalid server response: %s</string>
     <string name="socket_error_DESC">Server failed to provide new packet</string>
     <string name="connection_error_DESC">Couldn\'t connect to server</string>
     <string name="http_proxy">HTTP proxy</string>
@@ -265,7 +265,11 @@
     <string name="select_installer">Select installer</string>
     <string name="title_activity_main_compose">MainComposeActivity</string>
     <string name="rb_badge">Reproducible build badge</string>
-    <string name="rb_badge_info">Green Tick \t -> Verified reproducible build\nRed Tick \t -> Non-reproducible build\nBrown Tick \t -> Unknown state</string>
+    <string name="rb_badge_verified">Verified reproducible build</string>
+    <string name="rb_badge_non_reproducible">Non-reproducible build</string>
+    <string name="rb_badge_unknown">Unknown state</string>
+    <string name="rb_badge_no_data">No reproducible build data</string>
+    <string name="rb_what_is">What is reproducible builds?</string>
     <string name="rb_info">If a build is reproducible, it means the given apk is build from the provided source</string>
     <string name="total_downloads">Total downloads</string>
     <string name="download_stats">Download Statistics</string>
@@ -295,4 +299,7 @@
     <string name="custom_buttons_export">Export buttons</string>
     <string name="custom_buttons_import">Import buttons</string>
     <string name="custom_buttons_imported">Custom buttons imported</string>
+    <string name="scan_qr_code">Scan QR code</string>
+    <string name="qr_camera_permission_required">Camera permission is required to scan QR codes</string>
+    <string name="qr_scan_failed">Failed to scan QR code</string>
 </resources>

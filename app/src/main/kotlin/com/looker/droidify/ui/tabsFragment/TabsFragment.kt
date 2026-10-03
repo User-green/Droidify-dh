@@ -12,6 +12,7 @@ import android.view.ViewGroup
 import android.view.animation.DecelerateInterpolator
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.SearchView
 import androidx.core.view.isGone
@@ -53,9 +54,9 @@ import com.looker.droidify.widget.FocusSearchView
 import com.looker.droidify.widget.StableRecyclerAdapter
 import com.looker.droidify.widget.addDivider
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import com.looker.droidify.R.string as stringRes
 
 @AndroidEntryPoint
@@ -102,10 +103,10 @@ class TabsFragment : ScreenFragment() {
             if (field != value) {
                 field = value
                 viewModel.showSections.value = value
-                val layout = layout
                 layout?.tabs?.let {
-                    (0 until it.childCount)
-                        .forEach { index -> it.getChildAt(index)!!.isEnabled = !value }
+                    for (index in 0..<it.childCount) {
+                        it.getChildAt(index)!!.isEnabled = !value
+                    }
                 }
                 layout?.sectionIcon?.scaleY = if (value) -1f else 1f
                 if (((sectionsList?.parent as? View)?.height ?: 0) > 0) {
@@ -251,13 +252,17 @@ class TabsFragment : ScreenFragment() {
         }
 
         toolbar.post {
-            toolbar.findViewById<View>(R.id.toolbar_sync)?.setOnLongClickListener {
+            toolbar.findViewById<View>(R.id.toolbar_sync)?.setOnLongClickListener { view ->
+                Toast.makeText(view.context, stringRes.sync_repositories, Toast.LENGTH_SHORT).show()
                 Database.RepositoryAdapter.getAll().forEach {
                     if (it.lastModified.isNotEmpty() || it.entityTag.isNotEmpty()) {
                         Database.RepositoryAdapter.put(it.copy(lastModified = "", entityTag = ""))
                     }
                 }
-                syncConnection.binder?.sync(SyncService.SyncRequest.FORCE)
+                viewLifecycleOwner.lifecycleScope.launch {
+                    viewModel.resetPrivacyFetchTimestamps()
+                    syncConnection.binder?.sync(SyncService.SyncRequest.FORCE)
+                }
                 true
             }
         }
@@ -358,24 +363,22 @@ class TabsFragment : ScreenFragment() {
             val margins = 8.dp
             (layoutParams as ViewGroup.MarginLayoutParams).setMargins(margins, margins, margins, 0)
             visibility = View.GONE
-            systemBarsPadding(includeFab = false)
+            systemBarsPadding(fabPadding = 0)
         }
         this.sectionsList = sectionsList
 
         var lastContentHeight = -1
-        content.viewTreeObserver.addOnGlobalLayoutListener {
-            if (this.view != null) {
-                val initial = lastContentHeight <= 0
-                val contentHeight = content.height
-                if (lastContentHeight != contentHeight) {
-                    lastContentHeight = contentHeight
-                    if (initial) {
-                        sectionsList.layoutParams.height = if (showSections) contentHeight else 0
-                        sectionsList.isVisible = showSections
-                        sectionsList.requestLayout()
-                    } else {
-                        animateSectionsList()
-                    }
+        content.addOnLayoutChangeListener { _, _, top, _, bottom, _, _, _, _ ->
+            val initial = lastContentHeight <= 0
+            val contentHeight = bottom - top
+            if (lastContentHeight != contentHeight) {
+                lastContentHeight = contentHeight
+                if (initial) {
+                    sectionsList.layoutParams.height = if (showSections) contentHeight else 0
+                    sectionsList.isVisible = showSections
+                    sectionsList.requestLayout()
+                } else {
+                    animateSectionsList()
                 }
             }
         }
@@ -462,6 +465,10 @@ class TabsFragment : ScreenFragment() {
 
     internal fun selectUpdates() = selectUpdatesInternal(true)
 
+    internal fun updateAll() {
+        lifecycleScope.launch { syncConnection.binder?.updateAllApps() }
+    }
+
     private fun updateUpdateNotificationBlocker(activeSource: AppListFragment.Source) {
         val blockerFragment = if (activeSource == AppListFragment.Source.UPDATES) {
             productFragments.find { it.source == activeSource }
@@ -526,7 +533,7 @@ class TabsFragment : ScreenFragment() {
                     sectionsList.apply {
                         val height = ((parent as View).height * newValue).toInt()
                         val visible = height > 0
-                        if ((visibility == View.VISIBLE) != visible) isVisible = visible
+                        if (isVisible != visible) isVisible = visible
                         if (layoutParams.height != height) {
                             layoutParams.height = height
                             requestLayout()

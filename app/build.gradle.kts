@@ -1,6 +1,4 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
-import io.gitlab.arturbosch.detekt.Detekt
-import io.gitlab.arturbosch.detekt.DetektCreateBaselineTask
 
 plugins {
     alias(libs.plugins.android.application)
@@ -9,31 +7,26 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.kotlin.parcelize)
     alias(libs.plugins.compose)
-    alias(libs.plugins.detekt)
 }
 
 android {
-    val latestVersionName = "1.0.0"
     namespace = "com.looker.droidify"
     compileSdk {
-        version = release(36)
+        version = release(37) {
+            minorApiLevel = 1
+        }
     }
 
     defaultConfig {
         applicationId = "org.eu.tslp.droidifydh"
         minSdk = 23
-        versionName = latestVersionName
+        versionName = "1.0.0"
         versionCode = 1000
 
         testInstrumentationRunner = "com.looker.droidify.TestRunner"
     }
 
     androidResources.generateLocaleConfig = true
-
-    ksp {
-        arg("room.schemaLocation", "$projectDir/schemas")
-        arg("room.generateKotlin", "true")
-    }
 
     buildTypes {
         release {
@@ -44,27 +37,9 @@ android {
                 "proguard.pro",
             )
         }
-        create("alpha") {
-            initWith(getByName("debug"))
-            applicationIdSuffix = ".alpha"
-            versionNameSuffix = ".a"
-            isMinifyEnabled = true
-            isDebuggable = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard.pro",
-            )
-        }
         debug {
             applicationIdSuffix = ".debug"
             versionNameSuffix = ".d"
-        }
-        all {
-            buildConfigField(
-                type = "String",
-                name = "VERSION_NAME",
-                value = "\"v$latestVersionName\"",
-            )
         }
     }
 
@@ -83,17 +58,10 @@ android {
         }
     }
 
-    kotlin {
-        compilerOptions {
-            freeCompilerArgs.addAll("-Xcontext-parameters")
-            optIn.add("kotlin.RequiresOptIn")
-        }
-    }
-
     compileOptions {
-        isCoreLibraryDesugaringEnabled = true
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        isCoreLibraryDesugaringEnabled = true
     }
 
     buildFeatures {
@@ -121,64 +89,18 @@ android {
     }
 }
 
-java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
-        vendor.set(JvmVendorSpec.JETBRAINS)
-    }
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+    arg("room.generateKotlin", "true")
 }
 
-detekt {
-    buildUponDefaultConfig = true
-    parallel = true
-    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-    baseline = file("$rootDir/config/detekt/baseline.xml")
-}
-
-val contextParamFiles = listOf("**/extension/Flow.kt", "**/extension/Number.kt")
-
-tasks.withType<Detekt>().configureEach {
-    jvmTarget = JavaVersion.VERSION_17.toString()
-    exclude(contextParamFiles)
-    reports {
-        html.required.set(true)
-        sarif.required.set(true)
-        xml.required.set(false)
-        txt.required.set(false)
-    }
-}
-tasks.withType<DetektCreateBaselineTask>().configureEach {
-    jvmTarget = JavaVersion.VERSION_17.toString()
-    exclude(contextParamFiles)
-}
-
-val detektFormat by tasks.registering(Detekt::class) {
-    description = "Auto-format Kotlin sources via detekt (ktlint rules)."
-    group = "formatting"
-    autoCorrect = true
-    parallel = true
-    buildUponDefaultConfig = true
-    ignoreFailures = true
-    setSource(files("src/main/kotlin", "src/test/kotlin", "src/androidTest/kotlin"))
-    config.setFrom(files("$rootDir/config/detekt/detekt.yml"))
-    include("**/*.kt", "**/*.kts")
-    exclude("**/build/**", "**/resources/**")
-    exclude(contextParamFiles)
-    jvmTarget = JavaVersion.VERSION_17.toString()
-    reports {
-        html.required.set(false)
-        sarif.required.set(false)
-        xml.required.set(false)
-        txt.required.set(false)
+kotlin {
+    compilerOptions {
+        optIn.add("kotlin.RequiresOptIn")
     }
 }
 
 dependencies {
-    detektPlugins(libs.detekt.formatting)
-    detektPlugins(libs.detekt.compose)
-
-    coreLibraryDesugaring(libs.desugaring)
-
     implementation(libs.material)
     implementation(libs.core.ktx)
     implementation(libs.activity)
@@ -190,12 +112,14 @@ dependencies {
 
     implementation(libs.image.viewer)
     implementation(libs.bundles.coil)
+    implementation(libs.quickie.foss)
+    // Required for QuickieFOSS
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
 
     implementation(libs.datastore.core)
     implementation(libs.datastore.proto)
 
     implementation(libs.kotlin.stdlib)
-    implementation(libs.datetime)
 
     implementation(libs.bundles.coroutines)
 
@@ -206,7 +130,7 @@ dependencies {
     implementation(libs.jackson.core)
     implementation(libs.serialization)
 
-    implementation(libs.bundles.ktor)
+    implementation(libs.okhttp)
     implementation(libs.bundles.room)
     ksp(libs.room.compiler)
 
@@ -241,7 +165,7 @@ dependencies {
     androidTestImplementation(libs.bundles.test.android)
     kspAndroidTest(libs.hilt.compiler)
 
-//    debugImplementation(libs.leakcanary)
+    debugImplementation(libs.leakcanary)
 }
 
 // using a task as a preBuild dependency instead of a function that takes some time insures that it runs

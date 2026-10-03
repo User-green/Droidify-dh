@@ -52,7 +52,7 @@
     <string name="has_advertising">يحتوي على إعلانات</string>
     <string name="has_non_free_dependencies">يحتوي على تبعيات غير حرة</string>
     <string name="has_security_vulnerabilities">يحتوي على ثغرات أمنية</string>
-    <string name="http_error_DESC">استجابة الخادم غير صحيحة</string>
+    <string name="http_error_DESC">استجابة الخادم غير صحيحة: %s</string>
     <string name="ignore_all_updates">تجاهل الإصدارات الجديدة</string>
     <string name="ignore_this_update">تجاهل هذا الإصدار</string>
     <string name="incompatible_api_DESC_FORMAT">%1$s (إصدار API %2$d) غير مدعوم. %3$s</string>
@@ -166,7 +166,7 @@
     <string name="version">الإصدار</string>
     <string name="version_FORMAT">الإصدار %s</string>
     <string name="versions">الإصدارات</string>
-    <string name="waiting_to_start_download">في انتظار بدء التنزيل…</string>
+    <string name="waiting_to_start_download">التنزيل قيد الانتظار…</string>
     <string name="whats_new">ما الجديد</string>
     <string name="website">الموقع الإلكتروني</string>
     <string name="prefs_language_title">اللغة</string>
@@ -174,20 +174,20 @@
     <string name="update_all">حدِّث الكل</string>
     <string name="cleanup_title">مدة تنظيف ملفات APK</string>
     <plurals name="days">
-        <item quantity="zero">أقل من يوم</item>
-        <item quantity="one">يوم</item>
-        <item quantity="two">يومان</item>
-        <item quantity="few">أيام</item>
-        <item quantity="many">يومًا</item>
-        <item quantity="other">يوم</item>
+        <item quantity="zero">%d أقل من يوم</item>
+        <item quantity="one">%d يوم</item>
+        <item quantity="two">%d يومان</item>
+        <item quantity="few">%d أيام</item>
+        <item quantity="many">%d يومًا</item>
+        <item quantity="other">%d يوم</item>
     </plurals>
     <plurals name="hours">
-        <item quantity="zero">أقل من ساعة</item>
-        <item quantity="one">ساعة</item>
-        <item quantity="two">ساعتان</item>
-        <item quantity="few">ساعات</item>
-        <item quantity="many">ساعةً</item>
-        <item quantity="other">ساعة</item>
+        <item quantity="zero">%d أقل من ساعة</item>
+        <item quantity="one">%d ساعة</item>
+        <item quantity="two">%d ساعتان</item>
+        <item quantity="few">%d ساعات</item>
+        <item quantity="many">%d ساعةً</item>
+        <item quantity="other">%d ساعة</item>
     </plurals>
     <string name="only_on_wifi_with_charging">فقط على شبكة واي-فاي وعند الشحن</string>
     <string name="io_error_DESC">تعذَّر أداء بعض الإجراءات</string>
@@ -199,7 +199,7 @@
     <string name="force_clean_up_DESC">ينظِّف الملفَّات المتكرِّرة</string>
     <string name="enable_repo">فعِّل المستودع</string>
     <string name="installing">يثبّت</string>
-    <string name="waiting_to_start_installation">في انتظار بدء التثبيت…</string>
+    <string name="waiting_to_start_installation">التثبيت قيد الانتظار…</string>
     <string name="auto_update">حدِّث التطبيقات تلقائيًّا</string>
     <string name="auto_update_apps">ثبِّت التحديثات تلقائيًّا</string>
     <string name="has_non_free_components">يحتوي على مكونات غير حرة</string>
@@ -256,7 +256,6 @@
     <string name="repository_not_found_by_id">المستودع غير موجود</string>
     <string name="title_activity_main_compose">MainComposeActivity</string>
     <string name="rb_badge">شارة البناء المضمون تطابقه</string>
-    <string name="rb_badge_info">علامة صح خضراء \t -&gt; أُكِّد أن البناء مضمون تطابقه\nعلامة صح حمراء \t -&gt; البناء غير مضمون تطابقه \nعلامة صح بنية \t -&gt; حالة غير معروفة</string>
     <string name="rb_info">إذا كان البناء مضمون تطابقه، فهذا يعني أن ملف apk المحدّد بُنيَ من المصدر المقدم</string>
     <string name="total_downloads">إجمالي التنزيلات</string>
     <string name="download_stats">إحصائيات التنزيل</string>
@@ -288,4 +287,17 @@
     <string name="custom_buttons_import">استورد أزرار</string>
     <string name="custom_buttons_imported">استوردت الأزرار المخصّصة</string>
     <string name="copied_to_clipboard">نُسخ</string>
+    <string name="proxy_restart_required">مطلوب إعادة التشغيل حتى تصبح التغييرات سارية المفعول.</string>
+    <string name="tap_to_resume_updates">افتح التطبيق لاستئناف التحديثات</string>
+    <string name="rb_badge_verified">تحققَ من البناء المضمون تطابقه</string>
+    <string name="rb_badge_non_reproducible">البناء غير مضمون تطابقه</string>
+    <string name="rb_badge_unknown">حالة مجهولة</string>
+    <string name="rb_badge_no_data">لا بيانات من البناء المضمون تطابقه</string>
+    <string name="rb_what_is">ما هو البناء المضمون تطابقه؟</string>
+    <string name="download_statistics_summary">استرداد وعرض أعداد التنزيلات الشهرية من IzzyOnDroid. يؤدي تعطيل هذه الميزة إلى مسح إحصائيات التنزيل الحالية.</string>
+    <string name="reproducibility_logs">سجلّات البناء المضمون تطابقه</string>
+    <string name="reproducibility_logs_summary">استرداد وعرض سجلّات التحقق من البناء المضمون تطابقه من IzzyOnDroid. يؤدي التعطيل إلى مسح سجلّات البناء المضمون تطابقه.</string>
+    <string name="scan_qr_code">امسح رمز QR</string>
+    <string name="qr_camera_permission_required">يلزم الحصول على إذن الكاميرا لمسح رموز QR</string>
+    <string name="qr_scan_failed">فشل مسح رمز QR</string>
 </resources>

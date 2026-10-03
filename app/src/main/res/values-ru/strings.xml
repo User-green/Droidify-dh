@@ -43,7 +43,7 @@
     <string name="has_advertising">Содержит рекламу</string>
     <string name="has_non_free_dependencies">Зависит от других несвободных приложений</string>
     <string name="has_security_vulnerabilities">Имеет известные уязвимости безопасности</string>
-    <string name="http_error_DESC">Некорректный ответ сервера</string>
+    <string name="http_error_DESC">Неправильный ответ сервера: %s</string>
     <string name="http_proxy">HTTP-прокси</string>
     <string name="ignore_all_updates">Игнорировать новые версии</string>
     <string name="ignore_this_update">Игнорировать эту версию</string>
@@ -172,16 +172,16 @@
     <string name="session_installer">Сессионный установщик</string>
     <string name="cleanup_title">Интервал удаления APK</string>
     <plurals name="days">
-        <item quantity="one">день</item>
-        <item quantity="few">дня</item>
-        <item quantity="many">дней</item>
-        <item quantity="other">дней</item>
+        <item quantity="one">%d день</item>
+        <item quantity="few">%d дня</item>
+        <item quantity="many">%d дней</item>
+        <item quantity="other">%d дней</item>
     </plurals>
     <plurals name="hours">
-        <item quantity="one">час</item>
-        <item quantity="few">часа</item>
-        <item quantity="many">часов</item>
-        <item quantity="other">часов</item>
+        <item quantity="one">%d час</item>
+        <item quantity="few">%d часа</item>
+        <item quantity="many">%d часов</item>
+        <item quantity="other">%d часов</item>
     </plurals>
     <string name="only_on_wifi_with_charging">Только по Wi-Fi и на зарядке</string>
     <string name="io_error_DESC">Невозможно выполнить определённые действия</string>
@@ -250,7 +250,6 @@
     <string name="repository_not_found_by_id">Репозиторий не найден</string>
     <string name="title_activity_main_compose">MainComposeActivity</string>
     <string name="rb_badge">Значок воспроизводимой сборки</string>
-    <string name="rb_badge_info">Зелёная галочка \t → Проверенно воспроизводимая сборка\nКрасная галочка \t → Невоспроизводимая сборка\nКоричневая галочка \t → Неизвестное состояние</string>
     <string name="rb_info">Воспроизводимая сборка означает, что данный apk-файл собран из предоставленного исходного кода</string>
     <string name="total_downloads">Всего скачиваний</string>
     <string name="download_stats">Статистика скачиваний</string>
@@ -282,4 +281,17 @@
     <string name="custom_buttons_import">Импорт кнопок</string>
     <string name="custom_buttons_imported">Пользовательские кнопки импортированы</string>
     <string name="copied_to_clipboard">Скопировано</string>
+    <string name="proxy_restart_required">Для применения изменений требуется перезапуск.</string>
+    <string name="tap_to_resume_updates">Откройте приложение для возобновления обновления</string>
+    <string name="rb_badge_non_reproducible">Невоспроизводимая сборка</string>
+    <string name="rb_badge_unknown">Неизвестное состояние</string>
+    <string name="rb_badge_no_data">Нет данных о воспроизводимости сборки</string>
+    <string name="rb_what_is">Что такое воспроизводимые сборки?</string>
+    <string name="download_statistics_summary">Получение и отображение количества загрузок за месяц с IzzyOnDroid. При отключении существующая статистика загрузок удаляется.</string>
+    <string name="reproducibility_logs">Журналы воспроизводимости</string>
+    <string name="reproducibility_logs_summary">Получение и отображение журналов воспроизводимости с IzzyOnDroid. При отключении существующие журналы воспроизводимости удаляются.</string>
+    <string name="rb_badge_verified">Проверенная воспроизводимая сборка</string>
+    <string name="scan_qr_code">Сканировать QR-код</string>
+    <string name="qr_camera_permission_required">Для сканирования QR-кодов требуется разрешение на доступ к камере</string>
+    <string name="qr_scan_failed">Невозможно сканировать QR-код</string>
 </resources>

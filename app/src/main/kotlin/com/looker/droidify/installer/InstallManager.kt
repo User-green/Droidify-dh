@@ -1,6 +1,7 @@
 package com.looker.droidify.installer
 
 import android.content.Context
+import android.util.Log
 import com.looker.droidify.data.model.PackageName
 import com.looker.droidify.database.Database
 import com.looker.droidify.datastore.SettingsRepository
@@ -26,13 +27,13 @@ import com.looker.droidify.utility.notifications.createInstallNotification
 import com.looker.droidify.utility.notifications.installNotification
 import com.looker.droidify.utility.notifications.removeInstallNotification
 import com.looker.droidify.utility.notifications.updatesAvailableNotification
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.consumeEach
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -49,12 +50,10 @@ class InstallManager(
 
     val state = MutableStateFlow<Map<PackageName, InstallState>>(emptyMap())
 
-    private var _installer: Installer? = null
-        set(value) {
-            field?.close()
-            field = value
-        }
-    private val installer: Installer get() = _installer!!
+    // Cached installer for the current preference. Dhizuku holds a persistent privileged binding that
+    // must survive across a whole install queue, so the instance is reused (and closed only when the
+    // preference changes) instead of being recreated per item.
+    private var cachedInstaller: Pair<InstallerType, Installer>? = null
 
     private val lock = Mutex()
 
@@ -72,13 +71,11 @@ class InstallManager(
     private val notificationManager by lazy { context.notificationManager }
 
     suspend operator fun invoke() = coroutineScope {
-        setupInstaller()
         installer()
         uninstaller()
     }
 
     fun close() {
-        _installer = null
         uninstallItems.close()
         installItems.close()
     }
@@ -112,10 +109,6 @@ class InstallManager(
         }
     }
 
-    private fun CoroutineScope.setupInstaller() = launch {
-        installerPreference.collectLatest(::setInstaller)
-    }
-
     private fun CoroutineScope.installer() = launch {
         val currentQueue = mutableSetOf<String>()
         installItems.filter { item ->
@@ -133,6 +126,8 @@ class InstallManager(
                         state = InstallState.Installing,
                     ),
                 )
+                val installer = currentInstaller()
+
                 // restartInstall() cancels the in-flight attempt and we re-run THIS item in place, so
                 // a restart never advances the queue to the next app.
                 var result: InstallState
@@ -142,12 +137,23 @@ class InstallManager(
                     var attempt: InstallState = InstallState.Failed
                     // A persistent installer (Dhizuku) holds one privileged binding for the whole
                     // queue; closing it per-item (use{}) unbinds and races the server killing the
-                    // service. Every other installer keeps the original close-per-item behaviour.
+                    // service. Every other installer keeps the close-per-item behaviour.
                     val job = launch {
-                        attempt = if (installer.keepAliveAcrossQueue) {
-                            installer.install(item)
-                        } else {
-                            installer.use { it.install(item) }
+                        attempt = try {
+                            if (installer.keepAliveAcrossQueue) {
+                                installer.install(item)
+                            } else {
+                                installer.use { it.install(item) }
+                            }
+                        } catch (e: CancellationException) {
+                            throw e
+                        } catch (e: Exception) {
+                            Log.e(
+                                "InstallManager",
+                                "Install failed for ${item.packageName.name}",
+                                e,
+                            )
+                            InstallState.Failed
                         }
                     }
                     activeInstall = item.packageName.name to job
@@ -185,13 +191,28 @@ class InstallManager(
 
     private fun CoroutineScope.uninstaller() = launch {
         uninstallItems.consumeEach {
-            installer.uninstall(it)
+            try {
+                currentInstaller().uninstall(it)
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                Log.e(
+                    "InstallManager",
+                    "Uninstall failed for ${it.name}",
+                    e,
+                )
+            }
         }
     }
 
-    private suspend fun setInstaller(installerType: InstallerType) {
-        lock.withLock {
-            _installer = when (installerType) {
+    private suspend fun currentInstaller(): Installer {
+        val type = installerPreference.first()
+        return lock.withLock {
+            cachedInstaller?.let { (cachedType, installer) ->
+                if (cachedType == type) return@withLock installer
+                installer.close()
+            }
+            val installer = when (type) {
                 InstallerType.LEGACY -> LegacyInstaller(context, settingsRepository)
                 InstallerType.SESSION -> SessionInstaller(context)
                 InstallerType.SHIZUKU ->
@@ -200,6 +221,8 @@ class InstallManager(
                 InstallerType.DHIZUKU ->
                     FallbackInstaller(context, DhizukuInstaller(context), SessionInstaller(context))
             }
+            cachedInstaller = type to installer
+            installer
         }
     }
 

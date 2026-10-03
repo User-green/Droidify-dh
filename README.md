@@ -27,53 +27,74 @@
 
 <div align="center">
 
-<img width="" src="metadata/en-US/images/featureGraphic.png" alt="Droid-ify" align="center">
+<img width="" src="assets/banner.svg" alt="Droid-ify" align="center">
 
-> **Clutterfree F-Droid client**
-
-[![GitHub stars](https://img.shields.io/github/stars/Iamlooker/Droid-ify?color=%2359a14f&style=for-the-badge)](https://github.com/Iamlooker/Droid-ify/stargazers)
-[![GitHub downloads](https://img.shields.io/github/downloads/Iamlooker/Droid-ify/total.svg?color=%236f9645&style=for-the-badge)](https://github.com/Iamlooker/Droid-ify/releases/)
-[![GitHub latest release](https://img.shields.io/github/v/release/Iamlooker/Droid-ify?display_name=tag&color=%23d97706&style=for-the-badge)](https://github.com/Iamlooker/Droid-ify/releases/latest)
-[![F-Droid latest release](https://img.shields.io/f-droid/v/com.looker.droidify?color=%23ea9010&style=for-the-badge)](https://f-droid.org/packages/com.looker.droidify)
 </div>
-<div align="left">
 
-<img src="metadata/en-US/images/phoneScreenshots/1.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/2.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/3.png" width="25%" /><img src="metadata/en-US/images/phoneScreenshots/4.png" width="25%" />
+<!-- [![GitHub downloads](https://img.shields.io/github/downloads/Iamlooker/Droid-ify/total.svg?color=%236f9645&style=for-the-badge)](https://github.com/Iamlooker/Droid-ify/releases/) -->
+<!-- [![GitHub](https://img.shields.io/github/v/release/Iamlooker/Droid-ify?display_name=tag&color=%23d97706&style=for-the-badge)](https://github.com/Iamlooker/Droid-ify/releases/latest) -->
+<!-- [![IzzyOnDroid](https://img.shields.io/endpoint?url=https://apt.izzysoft.de/fdroid/api/v1/shield/com.looker.droidify&label=IzzyOnDroid&style=for-the-badge)](https://apt.izzysoft.de/fdroid/index/apk/com.looker.droidify) -->
+<!-- [![F-Droid](https://img.shields.io/f-droid/v/com.looker.droidify?color=%23ea9010&style=for-the-badge)](https://f-droid.org/packages/com.looker.droidify) -->
+<!-- [![GitHub stars](https://img.shields.io/github/stars/Iamlooker/Droid-ify?color=%2359a14f&style=for-the-badge)](https://github.com/Iamlooker/Droid-ify/stargazers) -->
 
 * Browse and install apps from F-Droid repositories
 * Automatic app updates in the background
 * Multiple installation methods (Session, Root, Shizuku)
 * Add custom repositories with one tap
-* Works completely offline after initial sync
+* Browse offline after initial sync
 
-### Get Started
+### Installation
 
-**Download**: [GitHub Releases](https://github.com/Iamlooker/Droid-ify/releases/latest) • [F-Droid](https://f-droid.org/packages/com.looker.droidify)
+[<img src="https://gitlab.com/IzzyOnDroid/repo/-/raw/master/assets/IzzyOnDroid.png" height="80" alt="Get it on IzzyOnDroid">](https://apt.izzysoft.de/packages/com.looker.droidify)
+[<img src="https://fdroid.gitlab.io/artwork/badge/get-it-on.png" height="80" alt="Get it on F-Droid">](https://f-droid.org/packages/com.looker.droidify/)
+[<img src="https://raw.githubusercontent.com/vadret/android/master/assets/get-github.png" height="80" alt="Get it on GitHub">](https://github.com/Iamlooker/Droid-ify/releases/latest)
+[<img src="https://unifiedpush.org/img/codeberg-badge.png" height=80 alt="Get it on Codeberg">](https://codeberg.org/droidify/client/releases/latest)
 
 **Signature:**
+
 ```
 ED:88:59:C5:5A:F3:11:16:26:58:B9:4A:F9:82:B9:F0:91:DC:D2:76:28:D4:DE:34:86:D1:21:7E:BF:3C:99:35
 ```
 
 > [!Note]
-> Signature for older versions on F-Droid might be different
+> Signature for versions from F-Droid might be different
 
-**Build**: See [Building Guide](docs/building.md) for development setup
+#### Manual Building
 
-### Contributing
+```sh
+git clone https://github.com/Droid-ify/client droidify
+cd droidify
+./gradlew assembleRelease
+```
 
-**Want to help?** Check out our [Contributing Guide](CONTRIBUTING.md)
+### Contribute
 
-### Translations
+Code contribution: [CONTRIBUTING.md](CONTRIBUTING.md)
 
-[![Translation status](https://hosted.weblate.org/widgets/droidify/-/horizontal-auto.svg)](https://hosted.weblate.org/engage/droidify/?utm_source=widget)
+Translation: [Weblate](https://hosted.weblate.org/engage/droidify)
+
+## Source Code
+
+Currently source code exists in both [GitHub](https://github.com/Droid-ify/client/issues) and [Codeberg](https://codeberg.org/droidify/client/pulls), although GitHub is just a mirror for the Codeberg repo now.
+
+Releases will only be created on GitHub until the migration finishes.
+
+**When is migration considered finished?**
+
+No actual way to say that but I will try to pick the best possible time for migration of each component and call it done when it seems good enough.
+
+### Links
+
+Issue Tracker: [GitHub](https://github.com/Droid-ify/client/issues)
+
+Pull Requests: [Codeberg](https://codeberg.org/droidify/client/pulls)
 
 ### License
 
 ```
 Droid-ify
 
-Copyright (C) 2025 LooKeR
+Copyright (C) 2026 LooKeR
 Copyright (C) 2026 User-green (Droidify-DH fork)
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

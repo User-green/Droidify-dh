@@ -79,7 +79,7 @@ class SettingsViewModel @Inject constructor(
 
     fun setLanguage(language: String) {
         viewModelScope.launch {
-            val appLocale = LocaleListCompat.create(language.toLocale())
+            val appLocale = LocaleListCompat.create(Locale.forLanguageTag(language))
             AppCompatDelegate.setApplicationLocales(appLocale)
             settingsRepository.setLanguage(language)
         }
@@ -343,10 +343,4 @@ class SettingsViewModel @Inject constructor(
             .toList()
             .updateAsMutable { add(0, "system") }
     }
-}
-
-private fun String.toLocale(): Locale = when {
-    contains("-r") -> Locale(substring(0, 2), substring(4))
-    contains("_") -> Locale(substring(0, 2), substring(3))
-    else -> Locale(this)
 }
