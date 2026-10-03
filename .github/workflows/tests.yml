@@ -21,3 +21,12 @@ jobs:
         run: ./gradlew :app:testDebugUnitTest --daemon
         env:
           GRADLE_OPTS: "-Xmx3g -Xms256m -XX:MaxMetaspaceSize=512m"
+
+      - name: Upload test report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-report
+          path: |
+            app/build/reports/tests/testDebugUnitTest
+            app/build/test-results/testDebugUnitTest
