@@ -1,0 +1,6 @@
+Droidify-DH v1.1.0 — synced with upstream Droid-ify 0.7.8.
+
+- Merged all upstream Droid-ify changes up to 0.7.8
+- Dhizuku installer, privileged-installer fallback and restartable installs ported onto upstream's refactored install manager
+
+AI-assisted fork — review before trusting. All credit for Droid-ify goes to LooKeR and its contributors.
