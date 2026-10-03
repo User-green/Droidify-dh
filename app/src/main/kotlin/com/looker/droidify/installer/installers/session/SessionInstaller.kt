@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageInstaller
+import android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -17,9 +18,9 @@ import com.looker.droidify.utility.common.SdkCheck
 import com.looker.droidify.utility.common.cache.Cache
 import com.looker.droidify.utility.common.log
 import com.looker.droidify.utility.common.sdkAbove
+import kotlin.coroutines.resume
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
-import kotlin.coroutines.resume
 
 class SessionInstaller(private val context: Context) : Installer {
 
@@ -31,17 +32,7 @@ class SessionInstaller(private val context: Context) : Installer {
         // backgrounded/abandoned popup fails cleanly and frees the queue quickly; the user can
         // restart the install from the UI (or by reopening the app).
         private const val USER_ACTION_TIMEOUT_MS = 20_000L
-        private var installerCallbacks: PackageInstaller.SessionCallback? = null
         private val flags = if (SdkCheck.isSnowCake) PendingIntent.FLAG_MUTABLE else 0
-        private val sessionParams =
-            PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
-                sdkAbove(sdk = Build.VERSION_CODES.S) {
-                    setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
-                }
-                sdkAbove(sdk = Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                    setRequestUpdateOwnership(true)
-                }
-            }
     }
 
     override suspend fun install(
@@ -49,30 +40,30 @@ class SessionInstaller(private val context: Context) : Installer {
     ): InstallState = withTimeoutOrNull(USER_ACTION_TIMEOUT_MS) {
         suspendCancellableCoroutine { cont ->
         val cacheFile = Cache.getReleaseFile(context, installItem.installFileName)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM && installItem.unarchiveId != null) {
-            sessionParams.setUnarchiveId(installItem.unarchiveId)
-        }
+        val id = installer.createSession(sessionParams(installItem))
 
-        val id = installer.createSession(sessionParams)
-        val installerCallback = object : PackageInstaller.SessionCallback() {
+        val callback = object : PackageInstaller.SessionCallback() {
             override fun onCreated(sessionId: Int) {}
             override fun onBadgingChanged(sessionId: Int) {}
             override fun onActiveChanged(sessionId: Int, active: Boolean) {}
             override fun onProgressChanged(sessionId: Int, progress: Float) {}
             override fun onFinished(sessionId: Int, success: Boolean) {
-                if (sessionId == id) {
-                    cont.resume(
-                        if (success) InstallState.Installed else InstallState.Failed,
-                    )
-                }
+                if (sessionId != id || !cont.isActive) return
+                installer.unregisterSessionCallback(this)
+                cont.resume(if (success) InstallState.Installed else InstallState.Failed)
             }
         }
-        installerCallbacks = installerCallback
 
-        installer.registerSessionCallback(
-            installerCallbacks!!,
-            Handler(Looper.getMainLooper()),
-        )
+        cont.invokeOnCancellation {
+            installer.unregisterSessionCallback(callback)
+            try {
+                installer.abandonSession(id)
+            } catch (e: SecurityException) {
+                e.printStackTrace()
+            }
+        }
+
+        installer.registerSessionCallback(callback, Handler(Looper.getMainLooper()))
 
         val session = installer.openSession(id)
 
@@ -90,14 +81,6 @@ class SessionInstaller(private val context: Context) : Installer {
             val pendingIntent = PendingIntent.getBroadcast(context, id, intent, flags)
 
             if (cont.isActive) activeSession.commit(pendingIntent.intentSender)
-        }
-
-        cont.invokeOnCancellation {
-            try {
-                installer.abandonSession(id)
-            } catch (e: SecurityException) {
-                e.printStackTrace()
-            }
         }
         }
     } ?: run {
@@ -118,15 +101,19 @@ class SessionInstaller(private val context: Context) : Installer {
             cont.resume(Unit)
         }
 
-    override fun close() {
-        installerCallbacks?.let {
-            installer.unregisterSessionCallback(it)
-            installerCallbacks = null
+    private fun sessionParams(installItem: InstallItem) =
+        PackageInstaller.SessionParams(MODE_FULL_INSTALL).apply {
+            sdkAbove(sdk = Build.VERSION_CODES.S) {
+                setRequireUserAction(PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
+            }
+            sdkAbove(sdk = Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                setRequestUpdateOwnership(true)
+            }
+            sdkAbove(sdk = Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+                val unarchiveId = installItem.unarchiveId
+                if (unarchiveId != null) {
+                    setUnarchiveId(unarchiveId)
+                }
+            }
         }
-        try {
-            installer.mySessions.forEach { installer.abandonSession(it.sessionId) }
-        } catch (e: SecurityException) {
-            log(e.message, type = Log.ERROR)
-        }
-    }
 }

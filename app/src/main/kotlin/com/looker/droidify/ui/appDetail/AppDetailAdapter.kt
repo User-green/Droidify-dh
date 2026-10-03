@@ -6,34 +6,37 @@ import android.content.pm.PermissionGroupInfo
 import android.content.pm.PermissionInfo
 import android.content.res.Resources
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.net.Uri
 import android.os.Parcelable
 import android.text.SpannableStringBuilder
-import android.text.format.DateFormat
 import android.text.method.LinkMovementMethod
 import android.text.style.RelativeSizeSpan
 import android.text.style.ReplacementSpan
 import android.text.style.TypefaceSpan
 import android.view.Gravity
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
+import android.widget.PopupWindow
 import android.widget.TextSwitcher
 import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
-import androidx.appcompat.widget.TooltipCompat
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.drawable.toDrawable
 import androidx.core.net.toUri
 import androidx.core.text.bold
 import androidx.core.text.buildSpannedString
 import androidx.core.view.isGone
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager.HORIZONTAL
 import androidx.recyclerview.widget.RecyclerView
 import coil3.load
 import com.google.android.material.button.MaterialButton
@@ -44,7 +47,7 @@ import com.google.android.material.progressindicator.LinearProgressIndicator
 import com.google.android.material.snackbar.Snackbar
 import com.looker.droidify.R
 import com.looker.droidify.content.ProductPreferences
-import com.looker.droidify.data.local.model.RBLogEntity
+import com.looker.droidify.data.local.model.RBLog
 import com.looker.droidify.data.local.model.Reproducible
 import com.looker.droidify.data.local.model.toReproducible
 import com.looker.droidify.datastore.model.CustomButton
@@ -68,6 +71,7 @@ import com.looker.droidify.utility.common.extension.getMutatedIcon
 import com.looker.droidify.utility.common.extension.inflate
 import com.looker.droidify.utility.common.extension.open
 import com.looker.droidify.utility.common.extension.setTextSizeScaled
+import com.looker.droidify.utility.common.formatDate
 import com.looker.droidify.utility.common.nullIfEmpty
 import com.looker.droidify.utility.common.sdkName
 import com.looker.droidify.utility.extension.android.Android
@@ -75,28 +79,21 @@ import com.looker.droidify.utility.extension.resources.TypefaceExtra
 import com.looker.droidify.utility.extension.resources.sizeScaled
 import com.looker.droidify.utility.text.formatHtml
 import com.looker.droidify.widget.StableRecyclerAdapter
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toJavaLocalDateTime
-import kotlinx.datetime.toLocalDateTime
-import kotlinx.parcelize.Parcelize
-import java.time.format.DateTimeFormatter
-import java.time.format.FormatStyle
 import java.util.*
 import kotlin.math.PI
 import kotlin.math.roundToInt
 import kotlin.math.sin
-import kotlin.time.ExperimentalTime
-import kotlin.time.Instant
+import kotlinx.parcelize.Parcelize
 import com.google.android.material.R as MaterialR
 import com.looker.droidify.R.drawable as drawableRes
 import com.looker.droidify.R.string as stringRes
 
-@OptIn(ExperimentalTime::class)
 class AppDetailAdapter(private val callbacks: Callbacks) :
     StableRecyclerAdapter<AppDetailAdapter.ViewType, RecyclerView.ViewHolder>() {
 
     companion object {
         private const val MAX_RELEASE_ITEMS = 5
+        private const val RB_DEFINITION_URL = "https://reproducible-builds.org/docs/definition/"
     }
 
     interface Callbacks {
@@ -105,6 +102,7 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
         fun onPreferenceChanged(preference: ProductPreference)
         fun onPermissionsClick(group: String?, permissions: List<String>)
         fun onScreenshotClick(position: Int)
+        fun onVideoClick(url: String)
         fun onReleaseClick(release: Release)
         fun onRequestAddRepository(address: String)
         fun onUriClick(uri: Uri, shouldConfirm: Boolean): Boolean
@@ -571,8 +569,6 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
     }
 
     private class ReleaseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val dateFormat = DateFormat.getDateFormat(itemView.context)!!
-
         val version = itemView.findViewById<TextView>(R.id.version)!!
         val status = itemView.findViewById<TextView>(R.id.installation_status)!!
         val rbBadge = itemView.findViewById<ImageView>(R.id.rb_badge)!!
@@ -740,7 +736,7 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
         packageName: String,
         suggestedRepo: String? = null,
         products: List<Pair<Product, Repository>>,
-        rblogs: List<RBLogEntity>,
+        rblogs: List<RBLog>,
         downloads: Long,
         installedItem: InstalledItem?,
         isFavourite: Boolean,
@@ -1185,11 +1181,11 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                             ProductPreferences[switchItem.packageName].let {
                                 it.copy(
                                     ignoreVersionCode =
-                                    if (it.ignoreVersionCode == switchItem.versionCode) {
-                                        0
-                                    } else {
-                                        switchItem.versionCode
-                                    },
+                                        if (it.ignoreVersionCode == switchItem.versionCode) {
+                                            0
+                                        } else {
+                                            switchItem.versionCode
+                                        },
                                 )
                             }
                         }
@@ -1489,21 +1485,20 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                 holder as ScreenShotViewHolder
                 item as Item.ScreenshotItem
                 holder.screenshotsRecycler.run {
-                    val isRTL = context.resources.configuration.layoutDirection == View.LAYOUT_DIRECTION_RTL
                     if (layoutManager == null) {
                         setHasFixedSize(true)
                         isNestedScrollingEnabled = false
                         clipToPadding = false
                         val padding = 8.dp
                         setPadding(padding, padding, padding, padding)
-                        layoutManager = LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, isRTL)
+                        layoutManager = LinearLayoutManager(context, HORIZONTAL, false)
                     }
-                    val screenshotsAdapter = (adapter as? ScreenshotsAdapter)
-                        ?: ScreenshotsAdapter(callbacks::onScreenshotClick).also { adapter = it }
-                    screenshotsAdapter.setScreenshots(
-                        item.repository,
-                        item.packageName,
-                        if (isRTL) item.screenshots.reversed() else item.screenshots,
+                    adapter = ScreenshotsAdapter(
+                        onScreenshotClick = callbacks::onScreenshotClick,
+                        onVideoClick = callbacks::onVideoClick,
+                        packageName = item.packageName,
+                        repository = item.repository,
+                        screenshots = item.screenshots,
                     )
                 }
             }
@@ -1519,17 +1514,15 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                         val padding = 8.dp
                         setPadding(padding, 0, padding, padding)
                         layoutManager =
-                            LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false)
+                            LinearLayoutManager(context, HORIZONTAL, false)
                     }
-                    val buttonsAdapter = (adapter as? CustomButtonsAdapter)
-                        ?: CustomButtonsAdapter { url -> callbacks.onCustomButtonClick(url) }
-                            .also { adapter = it }
-                    buttonsAdapter.setButtons(
-                        buttons = item.buttons,
-                        packageName = item.packageName,
-                        appName = item.appName,
-                        authorName = item.authorName,
-                    )
+                    if (adapter == null) {
+                        adapter = CustomButtonsAdapter(
+                            buttons = item.buttons,
+                            product = product!!,
+                            onButtonClick = { url -> callbacks.onCustomButtonClick(url) },
+                        )
+                    }
                 }
             }
 
@@ -1580,10 +1573,9 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                     holder.helpIcon.isVisible = true
                     holder.helpIcon.imageTintList = color
 
-                    TooltipCompat.setTooltipText(
-                        holder.helpIcon,
-                        context.getString(R.string.rb_badge_info),
-                    )
+                    holder.helpIcon.setOnClickListener { anchor ->
+                        showRbInfoPopup(anchor)
+                    }
                 } else {
                     holder.helpIcon.isVisible = false
                     holder.helpIcon.setOnClickListener(null)
@@ -1679,31 +1671,31 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                     labels.asSequence().filter { it.first } + labels.asSequence()
                         .filter { !it.first }
                     ).forEach {
-                    if (builder.isNotEmpty()) {
-                        builder.append("\n\n")
-                        builder.setSpan(
-                            RelativeSizeSpan(1f / 3f),
-                            builder.length - 2,
-                            builder.length,
-                            SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE,
-                        )
+                        if (builder.isNotEmpty()) {
+                            builder.append("\n\n")
+                            builder.setSpan(
+                                RelativeSizeSpan(1f / 3f),
+                                builder.length - 2,
+                                builder.length,
+                                SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE,
+                            )
+                        }
+                        builder.append(it.second)
+                        if (!it.first) {
+                            // Replace dots with spans to enable word wrap
+                            it.second.asSequence()
+                                .mapIndexedNotNull { index, c -> if (c == '.') index else null }
+                                .map { index -> index + builder.length - it.second.length }
+                                .forEach { index ->
+                                    builder.setSpan(
+                                        DotSpan(),
+                                        index,
+                                        index + 1,
+                                        SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE,
+                                    )
+                                }
+                        }
                     }
-                    builder.append(it.second)
-                    if (!it.first) {
-                        // Replace dots with spans to enable word wrap
-                        it.second.asSequence()
-                            .mapIndexedNotNull { index, c -> if (c == '.') index else null }
-                            .map { index -> index + builder.length - it.second.length }
-                            .forEach { index ->
-                                builder.setSpan(
-                                    DotSpan(),
-                                    index,
-                                    index + 1,
-                                    SpannableStringBuilder.SPAN_EXCLUSIVE_EXCLUSIVE,
-                                )
-                            }
-                    }
-                }
                 holder.text.text = builder
             }
 
@@ -1775,17 +1767,7 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
 
                 holder.source.text =
                     context.getString(stringRes.provided_by_FORMAT, item.repository.name)
-                val instant = Instant.fromEpochMilliseconds(item.release.added)
-                // FDroid uses UTC time
-                val date = instant.toLocalDateTime(TimeZone.UTC)
-                val dateFormat = try {
-                    date.toJavaLocalDateTime()
-                        .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.SHORT))
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    holder.dateFormat.format(item.release.added)
-                }
-                holder.added.text = dateFormat
+                holder.added.text = formatDate(item.release.added)
                 holder.size.text = DataSize(item.release.size).toString()
                 holder.signature.isVisible =
                     item.showSignature && item.release.signature.isNotEmpty()
@@ -1807,7 +1789,7 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                         text = when (incompatibility) {
                             is Release.Incompatibility.MinSdk,
                             is Release.Incompatibility.MaxSdk,
-                            -> context.getString(
+                                -> context.getString(
                                 stringRes.incompatible_with_FORMAT,
                                 Android.name,
                             )
@@ -1831,20 +1813,16 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
                     }
                 }
                 with(holder.sdkVer) {
-                    val targetSdkVersion = sdkName.getOrDefault(
-                        item.release.targetSdkVersion,
-                        context.getString(
+                    val targetSdkVersion = sdkName[item.release.targetSdkVersion]
+                        ?: context.getString(
                             stringRes.label_unknown_sdk,
                             item.release.targetSdkVersion,
-                        ),
-                    )
-                    val minSdkVersion = sdkName.getOrDefault(
-                        item.release.minSdkVersion,
-                        context.getString(
+                        )
+                    val minSdkVersion = sdkName[item.release.minSdkVersion]
+                        ?: context.getString(
                             stringRes.label_unknown_sdk,
                             item.release.minSdkVersion,
-                        ),
-                    )
+                        )
                     text = context.getString(
                         stringRes.label_sdk_version,
                         targetSdkVersion,
@@ -1874,6 +1852,28 @@ class AppDetailAdapter(private val callbacks: Callbacks) :
     ) {
         view.context.copyToClipboard(link)
         Snackbar.make(view, snackbarText, Snackbar.LENGTH_SHORT).show()
+    }
+
+    private fun showRbInfoPopup(anchor: View) {
+        val content = LayoutInflater.from(anchor.context)
+            .inflate(R.layout.popup_rb_info, anchor.rootView as? ViewGroup, false)
+
+        val popup = PopupWindow(
+            content,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            true,
+        ).apply {
+            isOutsideTouchable = true
+            setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        }
+
+        content.findViewById<TextView>(R.id.rb_learn_more).setOnClickListener {
+            callbacks.onUriClick(RB_DEFINITION_URL.toUri(), false)
+            popup.dismiss()
+        }
+
+        popup.showAsDropDown(anchor)
     }
 
     private class DotSpan : ReplacementSpan() {

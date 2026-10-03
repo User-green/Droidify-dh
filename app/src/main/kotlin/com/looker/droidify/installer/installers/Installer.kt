@@ -23,4 +23,7 @@ interface Installer : AutoCloseable {
     suspend fun install(installItem: InstallItem): InstallState
 
     suspend fun uninstall(packageName: PackageName)
+
+    /** Releases any held resources. Stateless installers have nothing to release. */
+    override fun close() {}
 }

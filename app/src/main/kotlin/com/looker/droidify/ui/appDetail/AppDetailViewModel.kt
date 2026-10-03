@@ -6,7 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.looker.droidify.BuildConfig
 import com.looker.droidify.data.PrivacyRepository
-import com.looker.droidify.data.local.model.RBLogEntity
+import com.looker.droidify.data.local.model.RBLog
 import com.looker.droidify.data.model.toPackageName
 import com.looker.droidify.database.Database
 import com.looker.droidify.datastore.CustomButtonRepository
@@ -19,25 +19,25 @@ import com.looker.droidify.installer.installers.isShizukuGranted
 import com.looker.droidify.installer.installers.isShizukuInstalled
 import com.looker.droidify.installer.installers.isSuiAvailable
 import com.looker.droidify.installer.installers.requestPermissionListener
+import com.looker.droidify.installer.model.InstallItem
 import com.looker.droidify.installer.model.InstallState
-import com.looker.droidify.installer.model.installFrom
 import com.looker.droidify.model.InstalledItem
 import com.looker.droidify.model.Product
 import com.looker.droidify.model.Repository
 import com.looker.droidify.utility.common.extension.asStateFlow
 import com.looker.droidify.utility.extension.combine
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import javax.inject.Inject
 
 @HiltViewModel
 class AppDetailViewModel @Inject constructor(
     private val installer: InstallManager,
     private val settingsRepository: SettingsRepository,
-    private val customButtonRepository: CustomButtonRepository,
+    customButtonRepository: CustomButtonRepository,
     privacyRepository: PrivacyRepository,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
@@ -124,7 +124,11 @@ class AppDetailViewModel @Inject constructor(
 
     fun installPackage(packageName: String, fileName: String) {
         viewModelScope.launch {
-            installer install (packageName installFrom fileName)
+            val installItem = InstallItem(
+                packageName = packageName.toPackageName(),
+                installFileName = fileName,
+            )
+            installer install installItem
         }
     }
 
@@ -169,7 +173,7 @@ data class ShizukuState(
 data class AppDetailUiState(
     val products: List<Product> = emptyList(),
     val repos: List<Repository> = emptyList(),
-    val rblogs: List<RBLogEntity> = emptyList(),
+    val rblogs: List<RBLog> = emptyList(),
     val downloads: Long = -1,
     val installedItem: InstalledItem? = null,
     val isSelf: Boolean = false,

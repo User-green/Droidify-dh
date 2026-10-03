@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.app.AlertDialog
 import androidx.core.net.toUri
-import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.DialogFragment
@@ -21,6 +20,7 @@ import com.looker.droidify.databinding.EditRepositoryBinding
 import com.looker.droidify.model.Repository
 import com.looker.droidify.network.Downloader
 import com.looker.droidify.network.NetworkResponse
+import com.looker.droidify.network.header.authentication
 import com.looker.droidify.service.Connection
 import com.looker.droidify.service.SyncService
 import com.looker.droidify.ui.Message
@@ -33,10 +33,6 @@ import com.looker.droidify.utility.common.extension.getMutatedIcon
 import com.looker.droidify.utility.common.nullIfEmpty
 import com.looker.droidify.utility.extension.mainActivity
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import java.net.URI
 import java.net.URISyntaxException
 import java.net.URL
@@ -45,14 +41,20 @@ import java.nio.charset.Charset
 import java.util.*
 import javax.inject.Inject
 import kotlin.math.min
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import com.looker.droidify.R.string as stringRes
 
 @AndroidEntryPoint
 class EditRepositoryFragment() : ScreenFragment() {
 
     constructor(repositoryId: Long?, repoAddress: String?) : this() {
-        arguments =
-            bundleOf(EXTRA_REPOSITORY_ID to repositoryId, EXTRA_REPOSITORY_ADDRESS to repoAddress)
+        arguments = Bundle().apply {
+            if (repositoryId != null) putLong(EXTRA_REPOSITORY_ID, repositoryId)
+            if (repoAddress != null) putString(EXTRA_REPOSITORY_ADDRESS, repoAddress)
+        }
     }
 
     private var _binding: EditRepositoryBinding? = null
@@ -384,14 +386,12 @@ class EditRepositoryFragment() : ScreenFragment() {
             val fingerprint = binding.fingerprint.text.toString().replace(" ", "")
             val username = binding.username.text.toString().nullIfEmpty()
             val password = binding.password.text.toString().nullIfEmpty()
-            val authentication = username?.let { u ->
-                password?.let { p ->
-                    Base64.encodeToString(
-                        "$u:$p".toByteArray(Charset.defaultCharset()),
-                        Base64.NO_WRAP,
-                    )
-                }
-            }?.let { "Basic $it" }.orEmpty()
+            val authentication = if (username != null && password != null) {
+                "Basic " + Base64.encodeToString(
+                    "$username:$password".toByteArray(Charset.defaultCharset()),
+                    Base64.NO_WRAP,
+                )
+            } else ""
 
             if (check) {
                 checkJob = viewLifecycleOwner.lifecycleScope.launch(Dispatchers.Main) {
@@ -482,7 +482,7 @@ class EditRepositoryFragment() : ScreenFragment() {
 
     class SelectMirrorDialog() : DialogFragment() {
         constructor(mirrors: List<String>) : this() {
-            arguments = bundleOf(EXTRA_MIRRORS to ArrayList(mirrors))
+            arguments = Bundle().apply { putStringArrayList(EXTRA_MIRRORS, ArrayList(mirrors)) }
         }
 
         override fun onCreateDialog(savedInstanceState: Bundle?): AlertDialog {

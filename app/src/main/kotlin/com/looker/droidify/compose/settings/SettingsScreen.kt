@@ -41,6 +41,7 @@ import com.looker.droidify.datastore.model.LegacyInstallerComponent
 import com.looker.droidify.datastore.model.ProxyType
 import com.looker.droidify.datastore.model.Theme
 import com.looker.droidify.utility.common.SdkCheck
+import com.looker.droidify.utility.common.extension.getPackageInfoCompat
 import com.looker.droidify.utility.common.extension.openLink
 import com.looker.droidify.utility.common.isIgnoreBatteryEnabled
 import com.looker.droidify.utility.common.requestBatteryFreedom
@@ -382,9 +383,14 @@ fun SettingsScreen(
             }
 
             item {
+                val currentVersion = remember {
+                    context.packageManager
+                        .getPackageInfoCompat(context.packageName)!!
+                        .versionName!!
+                }
                 ActionSettingItem(
                     title = DROID_IFY_TITLE,
-                    description = BuildConfig.VERSION_NAME,
+                    description = currentVersion,
                     onClick = { context.openLink(DROID_IFY_URL) },
                 )
             }
@@ -547,11 +553,11 @@ private fun ProxyTypeSetting(
 private fun Duration.toDisplayString(): String {
     if (this == Duration.INFINITE) return stringResource(R.string.never)
     val hours = inWholeHours.toInt()
-    val days = inWholeDays.toInt()
     return if (hours >= 24) {
-        "$days " + pluralStringResource(R.plurals.days, days)
+        val days = inWholeDays.toInt()
+        pluralStringResource(R.plurals.days, days, days)
     } else {
-        "$hours " + pluralStringResource(R.plurals.hours, hours)
+        pluralStringResource(R.plurals.hours, hours, hours)
     }
 }
 
